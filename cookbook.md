@@ -13,6 +13,9 @@ There was one paper (ID 19120) with no title but was identified as a NP-related 
 There was four papers that were found in nicki's dataset while only one of them is paper. At the same time, there are just one record in Gill's record but this one is actually a poster. This record has also been corrected manuly in Gill's record. 
 # 1849	Journal Article	C. Zhao;J. M. Tall;R. A. Meyer;S. N. Raja	2003	Anti - allodynic effects of systemic and intrathecal morphine in two models of neuropathic pain in rats	The efficacy of opioids for neuropathic pain remains controversial. We investigated the effects of morphine on mechanical allodynia in two models of neuropathic pain in rats-the spared nerve injury (SNI, tight ligation of tibial and common peroneal nerves) and the spinal nerve ligation (SNL, L5/L6 tight ligation) models. Paw withdrawal threshold (PWT) to mechanical stimuli (VF hair) was measured using the up-down method in hairy and glabrous skin territories of the sural nerve(SNI) or in the mid-plantar paw(SNL). The PWT decreased significantly after SNI in hairy and glabrous skins (p<0.001). Thirty days after the SNI, the threshold in hairy skin (0.33 (0.21, 1.91)g; Median (25%,75% quartiles)) was significantly lower than in glabrous skin (1.85 (0.59, 3.5) g). In blinded experiments, both s.c. morphine (1, 3 and 10 mg/kg at 40 min intervals) and intrathecal (i.t.) morphine (0.1, 0.3, 0.6, 1.0 or 10 mug) dose-dependently attenuated mechanical allodynia induced by SNI measured in the hairy skin. The ED50 for the i.t. morphine was 0.66 (95%CI: 0.50-0.89) mug. The anti-allodynic effect of i.t. morphine (1.0 mug) was reversed by naloxone (5 mg/kg, i.p.). Furthermore, i.t. morphine (1 mug) had similar potencies in attenuating SNI-induced mechanical allodynia in glabrous and hairy skins. In SNL rats, PWT decreased significantly from 26 g at baseline to 2.7 (1.47, 3.51) g thirty days after SNL. Intrathecal morphine (30 mug) almost completely reversed the mechanical allodynia induced by SNL. Conclusions: 1) SNI-induced mechanical allodynia was more robust in hairy than in glabrous skin. 2) Systemic and i.t. morphine reverse the SNI-induced mechanical allodynia in a dose-dependent fashion. 3) i.t. morphine is also effective in reversing SNL-induced mechanical allodynia. Our results suggest that morphine, especially i.t. morphine, is likely to be effective in the treatment of neuropathic pain.	TRUE	FALSE	TRUE
 
+The first step is initiation(). This function initialize the enviorment. 
+
+The 2nd step is to read data(). 
 Meeting/proceedings/conference records are not considered valid paper because its lack of enough number results. However, taking them out should larged increase the accurency of the classification. This is also the reason we are trying to merge nicki's and gill's data here to elimite all those records.
 
 Here is a summary of the avaliable types of article:
@@ -29,6 +32,16 @@ Here is a summary of the avaliable types of article:
        thesis/dissertation                       Book               Book Section
                          1                        140                         88
 
-Only Book, Book section, article, review are kept for training the machine. 
+Only Book, Book section, article, review are kept for training the machine. Those procedures are done with function readData(), the output is the proper "orignal" data set. The script then call this function and save the output into "alldata".
 
-Three models can be chosen in the script (naive Bayes, k nearest neighbor, support vector machine). We found out that 
+Function preparedata() takes the alldata as input. It is made to remove the records with different dicisions made by s1 and s2, and then clean up the data from numbers, pounctuations, extra spaces, and stop words, by calling function normalizeabstract.
+
+The script then creates corpus. One can also create a word cloud at this step.
+
+Then, script creates document term matrix and removes the sparse terms.
+
+If the Naive Bayes is chosen as the machine, the docuemtns term matrix has to be convert from the occurrence to Yes/No, as the Naive Bayes only takes the later one.
+ 
+In order to train, validate and test the learning algorithm, we create the index for trainning data, validation data and test data with the ratio (60%, 20%, 20%). 
+
+Now we are ready for training. Three models can be chosen in the script (naive Bayes, k nearest neighbor, support vector machine). We found out that naive bayes has the best sensitivity: less false negative.   

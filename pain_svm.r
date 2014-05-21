@@ -128,8 +128,9 @@ convert_count <- function(x) {
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ml.model <- "Support Vector Machines"
+ml.model <- ""
 usesmalldataset <- F
+createwordcloud <- F
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if (exists("prepared") == F) initiation()
 if (exists("alldata") == F) alldata <- readData()
@@ -138,11 +139,11 @@ print(dim(cleandata)[1])
 if (exists("abstract.dm") == F) {
   print("-- Start to make corpus from the abstract")
   abstract.corpus <- Corpus(VectorSource(cleandata$abstract))
-   createwordcloud(cleandata$flag, abstract.corpus)
+  if (createwordcloud == T) createwordcloud(cleandata$flag, abstract.corpus)
   
   print("-- Start to build Document Term Matrix")
   abstract.dtm.ori <- DocumentTermMatrix(abstract.corpus)
-  abstract.dtm <- removeSparseTerms(abstract.dtm.ori, 0.95)
+  abstract.dtm <- removeSparseTerms(abstract.dtm.ori, 0.9)
   if (ml.model == "Naive Bayes") {
     print("start to convert counts to 0 or 1")  
     abstract.dm <- apply(abstract.dtm, 2, convert_count)
@@ -168,7 +169,7 @@ if (ml.model == "k-Nearest Neighbour") {
 }
 if (ml.model == "Support Vector Machines") {
   print("-- Start Support Vector Machines training and prediction")
-  classifier <- svm(abstract.dm[ind.train,], cleandata$flag[ind.train],kernel = "linear",cost = 100) #,cross=5,cost=1,gamma=2)
+  classifier <- svm(abstract.dm[ind.train,], cleandata$flag[ind.train],kernel = "linear",cost = 10) #,cross=5,cost=1,gamma=2)
   print("-- Start to calculate the prediction")
   prediction <- predict(classifier, newdata = abstract.dm[ind.test,])
 }
@@ -177,10 +178,11 @@ if (ml.model == "tune svm"){
   
     obj <- tune.svm(abstract.dm[ind.train,],cleandata$flag[ind.train],  
                     validation.x =abstract.dm[ind.validation,],validation.y =cleandata$flag[ind.validation],
-                    gamma = 2^(-1:1), cost = 2^(1:3),cross =5)
+                    gamma = 2^(-1:1), cost = 2^(1:4))
     summary(obj)
     plot(obj)
 }
-
+if (ml.model != ""){
 summary <- confusionMatrix(table(prediction, cleandata$flag[ind.test]))
 print(summary)
+}
