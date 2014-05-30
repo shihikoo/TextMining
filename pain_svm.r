@@ -64,7 +64,7 @@ readData <- function(){
 # 1. Only the papers both authors have the same conclusion are included.
 # 2. Add one logical column as a factor column. 
 # 3. Radomarize the data
-preparedata <- function(alldata){
+preparedata <- function(alldata,datasetratio1=1){
   print("-- Start to prepare data")
   #select papers both authors included
   posdata <- alldata[alldata$s1.included == T & alldata$s2.included == T,c(2,6)]
@@ -79,11 +79,9 @@ preparedata <- function(alldata){
   #combine pos and neg data
   cleandata <- rbind(posdata,negdata)
   #normalize the abstract
-  cleandata$abstract  <-  normalizeabstract(cleandata$abstract)
+  cleandata$abstract  <- normalizeabstract(cleandata$abstract)
   # randomalize the data
-  cleandata[sample(nrow(cleandata)),]
-  if (usesmalldataset == T){cleandata <- cleandata[1:10000,]}
-  cleandata
+  cleandata[sample(round(nrow(cleandata)*datasetratio1)),]
 }
 
 # Detailed normalization on text
@@ -97,9 +95,9 @@ normalizeabstract <- function(abstract){
   abstract <- gsub("\n", " ", abstract)
   
   #normalize numbers (all number including int, float are replaced with "anynumber", percentage to "percentage"), so they can be considered equally
-  abstract <- gsub("[0-9]*[.]?[0-9]+", " ", abstract) 
+  abstract <- gsub("[0-9]*[.]?[0-9]+", "anynumber", abstract) 
   abstract <- gsub("[0-9a-z]+@[0-9a-z]+","emailadd",abstract)
-  abstract <- gsub(" %","percentage",abstract)
+  abstract <- gsub("anynumber%","percentage",abstract)
   
   #normalize all non-word characters
   abstract <- gsub("<[^<>]+>"," ",abstract)
@@ -127,62 +125,144 @@ convert_count <- function(x) {
   y <- factor(y, levels=c(0,1),labels=c("No","Yes"))
 }
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ml.model <- ""
-usesmalldataset <- F
-createwordcloud <- F
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-if (exists("prepared") == F) initiation()
-if (exists("alldata") == F) alldata <- readData()
-if (exists("cleandata") == F) cleandata <- preparedata(alldata)
-print(dim(cleandata)[1])
-if (exists("abstract.dm") == F) {
+creatematrix <- function(cleandata,createwc=F,sparselevel=0.8){
   print("-- Start to make corpus from the abstract")
   abstract.corpus <- Corpus(VectorSource(cleandata$abstract))
-  if (createwordcloud == T) createwordcloud(cleandata$flag, abstract.corpus)
+  if (createwc == T) createwordcloud(cleandata$flag, abstract.corpus)
   
   print("-- Start to build Document Term Matrix")
-  abstract.dtm.ori <- DocumentTermMatrix(abstract.corpus)
-  abstract.dtm <- removeSparseTerms(abstract.dtm.ori, 0.9)
+  abstract.dtm <- DocumentTermMatrix(abstract.corpus)
+  abstract.dtm <- removeSparseTerms(abstract.dtm, sparselevel)
   if (ml.model == "Naive Bayes") {
     print("start to convert counts to 0 or 1")  
     abstract.dm <- apply(abstract.dtm, 2, convert_count)
   }
-  
+  else abstract.dm <- data.matrix(abstract.dtm)
+}
+traindata <- function(abstract.dm, flag, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel=0.98){
   print("-- Start to split the data")
-  ind.train <- sample(nrow(cleandata),round(length(cleandata$flag)*0.6))
-  ind.validation <- sample( (1:nrow(cleandata))[-ind.train], round(length(cleandata$flag)*0.2))
-  ind.test <- (1:nrow(cleandata))[-c(ind.train,ind.validation)]
-  if (ml.model != "Naive Bayes") abstract.dm <- data.matrix(abstract.dtm)
-  abstract.df <- as.data.frame(abstract.dm , stringAsFactors = T)
-}
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-if (ml.model == "Naive Bayes") {
-  print("-- Start naive Bayes training")
-  classifier <- naiveBayes(abstract.dm[ind.train,], cleandata$flag[ind.train])
-  print("-- Start to calculate the prediction")
-  prediction <- predict(classifier, newdata = abstract.dm[ind.test,])
-}
-if (ml.model == "k-Nearest Neighbour") {
-  print("-- Start k-Nearest Neighbour training and prediction")
-  prediction <- knn(abstract.dm[ind.train,], abstract.dm[ind.test,],cleandata$flag[ind.train], k =3)
-}
-if (ml.model == "Support Vector Machines") {
-  print("-- Start Support Vector Machines training and prediction")
-  classifier <- svm(abstract.dm[ind.train,], cleandata$flag[ind.train],kernel = "linear",cost = 10) #,cross=5,cost=1,gamma=2)
-  print("-- Start to calculate the prediction")
-  prediction <- predict(classifier, newdata = abstract.dm[ind.test,])
-}
-if (ml.model == "tune svm"){
-  print("-- Start to tune SVM")
+  ind.train <- sample(nrow(abstract.dm),round(length(flag)*0.6))
+  ind.validate <- sample( (1:nrow(abstract.dm))[-ind.train], round(length(flag)*0.2))
+  ind.test <- (1:nrow(abstract.dm))[-c(ind.train,ind.validate)]
   
-    obj <- tune.svm(abstract.dm[ind.train,],cleandata$flag[ind.train],  
-                    validation.x =abstract.dm[ind.validation,],validation.y =cleandata$flag[ind.validation],
+  if (ml.model == "NB") {
+    print(paste("-- Start naive Bayes training and prediction with sparse level:",sparselevel))
+    classifier <- naiveBayes(abstract.dm[ind.train,], flag[ind.train])
+    print("-- Start to calculate the prediction")
+    prediction_train <- predict(classifier, newdata = abstract.dm[ind.train,])
+    prediction_validate <- predict(classifier, newdata = abstract.dm[ind.validate,])
+  }
+  if (ml.model == "kNN") {
+    print("-- Start k-Nearest Neighbour training and prediction")
+    prediction_train  <- knn(abstract.dm[ind.train,], abstract.dm[ind.train,],flag[ind.train], k = k)
+    prediction_validate <- knn(abstract.dm[ind.train,], abstract.dm[ind.validate,],flag[ind.train], k = k)
+  }
+  if (ml.model == "SVM") {
+    print(paste("-- Start Support Vector Machines training and prediction with cost:", cost, ", gamma:",gamma,"sparse level:",sparselevel))
+    classifier <- svm(abstract.dm[ind.train,], flag[ind.train],cost=cost,gamma=gamma)
+    print("-- Start to calculate the prediction")
+    prediction_train <- predict(classifier, newdata = abstract.dm[ind.train,])
+    prediction_validate <- predict(classifier, newdata = abstract.dm[ind.validate,])
+  }
+  if (ml.model == "tune svm"){
+    print("-- Start to tune SVM")
+    obj <- tune.svm(abstract.dm[ind.train,],flag[ind.train],  
+                    validation.x =abstract.dm[ind.validate,],ind.validate =flag[ind.validate],
                     gamma = 2^(-1:1), cost = 2^(1:4))
     summary(obj)
     plot(obj)
+  }
+  summary_train <- confusionMatrix(table(prediction_train, flag[ind.train]))
+  print(summary_train)
+  summary_validate <- confusionMatrix(table(prediction_validate, flag[ind.validate]))
+  print(summary_validate)
+  
+  return(list(train=summary_train,validate=summary_validate))
 }
-if (ml.model != ""){
-summary <- confusionMatrix(table(prediction, cleandata$flag[ind.test]))
-print(summary)
+
+evaluateprediction <- function(plottype, ml.model, abstract.dm, cleandata,cost=cost,gamma=gamma,x=x,sparselevel=sparselevel){
+  print("Start to train and evaluate the prediction")
+
+  result.df <- data.frame(xvar = numeric(0), variable = character(0), value = numeric(0))
+
+  for(x in plottype[[1]]){
+    subind <- seq_along(cleandata$flag)
+    if( names(plottype) == "feature_curve") {
+        sparselevel <- x
+        abstract.dm <- creatematrix(cleandata,sparselevel=sparselevel)
+    }
+    if( names(plottype) == "learning_curve") {
+      subind = sample(round(nrow(abstract.dm)*x))  
+      x <- length(subind) 
+    }
+   
+    if( names(plottype) == "cost_curve") cost <- x
+    if( names(plottype) == "gamma_curve") gamma <- x
+    if( names(plottype) == "k_curve") k <- x
+
+    if( names(plottype) == "cost_gamma") {cost <- x[1]; gamma<-x[1]}
+    print(paste(names(plottype),x))  
+    summary<-traindata(abstract.dm[subind,],cleandata$flag[subind], ml.model=ml.model,cost=cost,gamma=gamma,k=k,sparselevel=sparselevel)
+
+    result.df <- rbind(result.df, list(x, "train_tpr",summary$train$byClass[1])
+                       ,list(x, "validate_tpr",summary$validate$byClass[1])
+                       ,list(x, "train_ppv",summary$train$byClass[3])
+                       ,list(x, "validate_ppv",summary$validate$byClass[3])
+                       ,list(x, "train_f1", 2*summary$train$byClass[1]*summary$train$byClass[3]/(summary$train$byClass[1]+summary$train$byClass[3]))
+                       ,list(x, "validate_f1", 2*summary$validate$byClass[1]*summary$validate$byClass[3]/(summary$validate$byClass[1]+summary$validate$byClass[3]))
+                    #   ,list(x, "train_Baccuracy",summary$train$byClass[8])
+                    #   ,list(x, "validate_Baccuracy",summary$validate$byClass[8])
+                    #   ,list(x, "train_specificity",summary$train$byClass[2])
+                    #   ,list(x, "validate_specificity",summary$validate$byClass[2])
+                       )
+  }
+  names(result.df) <- c("xvar","variable","value")
+  result.df
 }
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# set up the variables
+ml.model <- "kNN"
+datasetratio1 <- 1
+createwc <- F
+
+cost<- 0.5
+gamma <- 0.003
+sparselevel <- 0.95
+k <- 1
+
+plottype.list <- list("learning_curve" = c(0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1), 
+                      "feature_curve"= c(0.8,0.85,0.9,0.92,0.93,0.95,0.98),
+                      "cost_curve"= c(0.1, 0.5, 0.8, 0.9,1,2),
+                      "gamma_curve" =  c(0.0005,0.001,0.005,0.01),
+                      #             "cost_gamma" = list("cost" = c(0.1, 0.5, 0.8, 0.9,1,2),"gamma" = c(0.0005,0.001,0.005,0.01)),
+                      "k_curve" = c(1,3,5))
+plottype <- data.frame(plottype.list[2])
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (exists("prepared") == F) initiation()
+
+if (exists("alldata") == F) alldata <- readData()
+
+if (exists("cleandata") == F) cleandata <- preparedata(alldata,datasetratio1=datasetratio1)
+
+if (exists("abstract.dm") == F) abstract.dm <- creatematrix(cleandata,sparselevel=sparselevel)
+
+# if (exists("result.dfmelt") == F) 
+result.df <- evaluateprediction(plottype, ml.model,abstract.dm,cleandata,cost=cost,gamma=gamma,x=x,sparselevel=sparselevel)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+graphtitle <- paste(names(plottype), ", ",ml.model,"model")
+if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.dm))
+if (ml.model == "SVM") graphtitle<- paste(graphtitle,", C: ",cost,", gamma",gamma)
+if (ml.model == "kNN") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
+plot <- ggplot(data = result.df, aes(x=xvar,y=value,color=variable))+ylim(0, 1)+ ggtitle(graphtitle)
+plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("validate",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
+plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
+plot <- plot+xlab(names(plottype))
+plot
+filename <- paste("img/",names(plottype),"_",ml.model,sep="")
+if (names(plottype) != "feature_curve") filename <- paste(filename,"_sl",sparselevel,sep="")
+if (ml.model == "SVM" & names(plottype) != "cost_curve") filename <-  paste(filename, "_c",cost,sep="")
+if (ml.model == "SVM" & names(plottype) != "gamma_curve") filename <-  paste(filename, "_gamma",gamma,sep="")
+if (ml.model == "kNN" & names(plottype) != "k_curve") filename <-  paste(filename, "_k",k,sep="")
+filename <- gsub("[.]","",filename)
+filename <-  paste(filename, ".png",sep="")
+ggsave(file=filename)
