@@ -60,14 +60,19 @@ This figure is the learning curve when the sparse level at 0.9. It shows that th
 Hence, for small trainning data set NB is a good model giving a acceptable result with sensitivity at 75%, precision around 43% and f1 score around 53%.
 
 2. kNN model
-kNN model has one paramenter to tune, on top of number of features and the size of the training data. 
+kNN model has one paramenter (k) to tune, on top of number of features and the size of the training data. 
 
-![kNN k-curve with sparse level = 0.9](/img/k_curve_kNN_sl09.png)
+Normal choices of k are odd number range from 1 to 10, here we plotted for 1, 3, 5, 7, 9 and the result shows that the f1 score does not change much with k. There are bigger gaps between training data and testing data when k is small but the absolute results are better. Considering, the speed of training and testing is much faster when k is small. we chose k = 1 in this case. One conserning is that it was suggest using k = sqrt(n) as the first tempt for k but in our case k will have to be around 100, which I guess will take forever. We can try it when we can use the super computer. 
+![kNN k-curve with sparse level = 0.95](/img/k_curve_kNN_sl095.png)
 
-![kNN feature curve with k = 3](/img/feature_curve_NB_k3.png)
+This plot is the feature curve with k = 5. 
+![kNN feature curve with k = 5](/img/feature_curve_NB_k5.png)
 
 ![kNN learning curve with sparselevel = 0.9 and k = 3](/img/learning_curve_NB_sl09.png)
 
+*kNN takes a fairly long time to make predictions. 
+
 3. SVM model
 Tuning SVM is more time consuming. The changable variables are cost, gamma, sparse level and size of the trainning data set.
+
 
