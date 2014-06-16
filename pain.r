@@ -68,8 +68,6 @@ cost<- 0.9
 gamma <- 0.015
 sparselevel <- 0.98
 k <- 5
-train_ratio <- 0.6
-validate_ratio <- 0.2
 
 plottype.list <- list("learning_curve" = c(0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1), 
                       "feature_curve"= c(0.8,0.85,0.9,0.92,0.93,0.95,0.98),
@@ -84,14 +82,6 @@ if (exists("prepared") == F) initiation()
 if (exists("alldata") == F) alldata <- readData()
 if (exists("cleandata") == F) cleandata <- preprocessing(alldata,datasetratio1=datasetratio1)
 if (exists("abstract.df") == F) abstract.df <- createDF(cleandata,sparselevel=sparselevel,ml.model=ml.model)
-
-  nr <- nrow(abstract.df)
-  index <- 1:nr
-  
-  ind.train <- sample(index,round(nr*train_ratio))
-  ind.validate <- sample( index[-ind.train], round(nr*validate_ratio))
-  ind.test <- index[-c(ind.train,ind.validate)]
-
 
 #if (exists("result.df") == F) 
 #   result.df <- evaluateprediction(plottype, ml.model,abstract.dm,cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel)
