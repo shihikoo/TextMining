@@ -144,7 +144,6 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
 evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel){
   print("Start to train and evaluate the prediction")
   
-  
   for(x in plottype[[1]]){
     subind <- seq_along(cleandata$flag)
     if( names(plottype) == "feature_curve") {
@@ -185,7 +184,7 @@ evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=c
   result.df
 }
 
-plotcurve <- function(plottype, ml.model,abstract.dm,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel){
+plotcurve <- function(plottype, ml.model,abstract.dm,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
   graphtitle <- paste(names(plottype), ", ",ml.model,"model")
   if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.dm))
   if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle<- paste(graphtitle,", C: ",cost)
@@ -197,8 +196,8 @@ plotcurve <- function(plottype, ml.model,abstract.dm,result.df,cost=cost,gamma=g
   plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
   plot <- plot+xlab(names(plottype))
   plot
-
-saveplot <- function(plottype, ml.model,abstract.dm,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel)
+}
+saveplot <- function(plottype, ml.model,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
   filename <- paste("img/",names(plottype),"_",ml.model,sep="")
   if (names(plottype) != "feature_curve") filename <- paste(filename,"_sl",sparselevel,sep="")
   if (ml.model == "SVM" & names(plottype) != "cost_curve") filename <-  paste(filename, "_c",cost,sep="")

@@ -84,7 +84,7 @@ if (exists("cleandata") == F) cleandata <- preprocessing(alldata,datasetratio1=d
 if (exists("abstract.df") == F) abstract.df <- createDF(cleandata,sparselevel=sparselevel,ml.model=ml.model)
 
 #if (exists("result.df") == F) 
-#   result.df <- evaluateprediction(plottype, ml.model,abstract.dm,cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel)
+   result.df <- evaluateprediction(plottype, ml.model,abstract.dm,cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel)
 
 #plotcurve(plottype, ml.model,abstract.dm,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel)
 #saveplot
