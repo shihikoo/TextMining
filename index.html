@@ -34,7 +34,33 @@
           <h3>
 <a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Background</h3>
 
-<p></p>
+<p>The screening of current systematic review and meta-analysis relies mainly on human force. While specialists screening provides decent result and double-screening, during which two person screen the same set of publications independently, reduces the error less than 5%, automatic screening is urged to make the publication classification procedures more reproducible and free specialists from repetitive work. 
+</p>
+<h3>
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Aim</h3>
+
+<p>The goal of this project is to automate the procedure for publication classification. The ultimate goal is to have a live procedure that will pull data from the internet routinely, process them and classify and label them automatically for different aspects. 
+
+Our first attempt is to have an application to identify Neuroscientific Pain related publications from internet sources, such as PUBMeds, by screening the abstracts of the publications.</p>
+
+<h3>
+
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Data</h3>
+
+<p>Training data are provided by Gillian Currie and Nicki Sherratt in excel format. Dataset from Gillian provides the basic information of the paper and the manual screening decisions. Dataset from Nicki includes information of the article type from ENDNote, which is used in elimite the conference abstract in the data pre-processing stage . 
+
+Only the result in agreement is used (27467 instances). </p>
+
+<h3>
+
+<h3>
+<a name="authors-and-contributors" class="anchor" href="https://github.com/shihikoo"><span class="octicon octicon-link"></span></a> Methods </h3>
+
+<p>We used R program in implementing the text-mining procedure. 
+
+Step 1 pre-processes include transform data into tab separated txt file manually, read txt file and merge the two datasets, clean up the data by excluding the conference abstract and those instance with no abstract in. Step 2 pre-processing after turn the file into corpus is a standard cleanup is done to remove numbers, punctuation and extra spaces, as well as stop words. Words are stemmed as well. 
+
+We test Naive Bayes, kNN and SVM machine learning models in current code. Other possible models are Decision Trees, Outliers, adaboost, JRip, ‘penalizedSVM’ and etc. </p>
 
 <pre><code>
 > source('M:/GitHub/pain_svm/pain.r')
@@ -42,12 +68,7 @@
 
 <p></p>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Method</h3>
 
-<p> </p>
-
-<h3>
 <a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a></h3>
 
 <p> </p>
