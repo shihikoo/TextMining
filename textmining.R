@@ -27,11 +27,13 @@ preprocessing <- function(alldata,datasetratio1=1){
   #normalize the abstract
   cleandata$abstract  <- normalizeabstract(cleandata$abstract)
   # randomalize the data
+  set.seed(1)
   cleandata[sample(round(nrow(cleandata)*datasetratio1)),]
 }
 
 # Detailed normalization on text
 normalizeabstract <- function(abstract){
+  library(tm)
   print("---- Start abstract normalization")
   
   #lower-casing
@@ -82,19 +84,30 @@ createDF<- function(cleandata,ml.model='SVM', createwc=F,sparselevel=0.8){
   print("-- Start to build Document Term Matrix")
   abstract.dtm <- DocumentTermMatrix(abstract.corpus, 
                                      control = list(weighting = weightTfIdf, minWordLength = 3))
-  abstract.dtm <- removeSparseTerms(abstract.dtm, sparselevel)
-  print(abstract.dtm)
+  abstract.dtm <- removeSparseTerms(abstract.dtm, sparselevel) 
+  print("------------------------------------")
   if (ml.model == "NB") {
-    print("start to convert counts to 0 or 1")  
-    abstract.df <- as.data.frame(apply(abstract.dtm, 2, convert_count))
-  } else abstract.df <- as.data.frame(abstract.dtm)
+    print("start to convert counts to 0 or 1")
+    abstract.dm <- apply(abstract.dtm, 2, convert_count)
+    print("NB===============================")
+    abstract.df <- data.frame(abstract.dm)
+  } else {
+    abstract.dm <- inspect(abstract.dtm)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+    abstract.df <- data.frame(abstract.dm)
+  }
+  print("+++++++++++++++++++++++++++++++++++++++++")
   abstract.df$flag <- cleandata$flag
-  abstract.df
+
+  return(abstract.df)
 }
+
 traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel=0.98){
+  library(caret)
   print("-- Start to split the data")
   nr <- nrow(abstract.df)
   nc <- ncol(abstract.df)
+  set.seed(42)
   ind.train <- sample(nr,round(nr*0.6))
   ind.validate <- sample( (1:nr)[-ind.train], round(nr*0.2))
   ind.test <- (1:nr)[-c(ind.train,ind.validate)]
@@ -108,18 +121,20 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
   }
   if (ml.model == "kNN") {
-   
-    library(e1071)
+    library(caret)
     print("-- Start k-Nearest Neighbour training and prediction")
-    classifier <- knn3(formula, data, subset, na.action, k = 5, ...) 
-#     library(class)
-#     prediction_train  <- knn(abstract.df[ind.train,], abstract.df[ind.train,],flag[ind.train], k = k)
-#     prediction_validate <- knn(abstract.df[ind.train,], abstract.df[ind.validate,],flag[ind.train], k = k)
+   
+  #  classifier <- knn3(flag ~ ., abstract.df[ind.train,], k = k) 
+     library(class)
+     prediction_train  <- knn(abstract.df[ind.train,-nc], abstract.df[ind.train,-nc],abstract.df$flag[ind.train], k = k)
+     prediction_validate <- knn(abstract.df[ind.train,-nc], abstract.df[ind.validate,-nc],abstract.df$flag[ind.train], k = k)
   }
   if (ml.model == "SVM") {
     library(e1071)
     print(paste("-- Start Support Vector Machines training and prediction with cost:", cost, ", gamma:",gamma,"sparse level:",sparselevel))
-    classifier <- svm(abstract.df[ind.train,], flag[ind.train],cost=cost,gamma=gamma)
+    weight <- min(table(abstract.df$flag))/table(abstract.df$flag)
+    print(paste('weight: ',weight))
+    classifier <- svm(flag ~ ., data = abstract.df[ind.train,],cost=cost,gamma=gamma, class.weights = weight)
     print("-- Start to calculate the prediction")
     prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
@@ -127,32 +142,35 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
   if (ml.model == "tune svm"){
     library(e1071)
     print("-- Start to tune SVM")
-    obj <- tune.svm(abstract.df[ind.train,],flag[ind.train],  
-                    validation.x =abstract.df[ind.validate,],ind.validate =flag[ind.validate],
+    obj <- tune.svm(abstract.df[ind.train,],abstract.df$flag[ind.train],  
+                    validation.x =abstract.df[ind.validate,],ind.validate =abstract.df$flag[ind.validate],
                     gamma = 2^(-1:1), cost = 2^(1:4))
     summary(obj)
     plot(obj)
   }
-  summary_train <- confusionMatrix(table(prediction_train, flag[ind.train]))
+
+  
+  summary_train <- confusionMatrix(table(prediction_train, abstract.df$flag[ind.train]))
   print(summary_train)
-  summary_validate <- confusionMatrix(table(prediction_validate, flag[ind.validate]))
+  summary_validate <- confusionMatrix(table(prediction_validate, abstract.df$flag[ind.validate]))
   print(summary_validate)
   
   return(list(train=summary_train,validate=summary_validate))
 }
 
-evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel){
+evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
   print("Start to train and evaluate the prediction")
-  
+  result.df <- data.frame(xvar = numeric(0), variable = character(0), value = numeric(0))
   for(x in plottype[[1]]){
-    subind <- seq_along(cleandata$flag)
+    subind <- seq_along(abstract.df$flag)
+
     if( names(plottype) == "feature_curve") {
       sparselevel <- x
       abstract.df <- createDF(cleandata,sparselevel=sparselevel)
     }
     
     if( names(plottype) == "learning_curve") {
-      subind = sample(round(nrow(abstract.dm)*x))  
+      subind = sample(round(nrow(abstract.df)*x))  
       x <- length(subind) 
     }
     
@@ -166,8 +184,14 @@ evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=c
     }
     
     print(paste(names(plottype),x))  
-    summary<-traindata(abstract.dm[subind,],cleandata$flag[subind], ml.model=ml.model,cost=cost,gamma=gamma,k=k,sparselevel=sparselevel)
+    summary<-traindata(abstract.df[subind,], ml.model=ml.model,cost=cost,gamma=gamma,k=k,sparselevel=sparselevel)
+    temp <-  c(list(x, "train_tpr",summary$train$byClass[1]) ,list(x, "validate_tpr",summary$validate$byClass[1])
+        ,list(x, "train_ppv",summary$train$byClass[3]),list(x, "validate_ppv",summary$validate$byClass[3])
+    ,list(x, "train_f1", 2*summary$train$byClass[1]*summary$train$byClass[3]/(summary$train$byClass[1]+summary$train$byClass[3]))
+    ,list(x, "validate_f1", 2*summary$validate$byClass[1]*summary$validate$byClass[3]/(summary$validate$byClass[1]+summary$validate$byClass[3])))
     
+    class(temp)    
+
     result.df <- rbind(result.df, list(x, "train_tpr",summary$train$byClass[1])
                        ,list(x, "validate_tpr",summary$validate$byClass[1])
                        ,list(x, "train_ppv",summary$train$byClass[3])
@@ -184,14 +208,14 @@ evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=c
   result.df
 }
 
-plotcurve <- function(plottype, ml.model,abstract.dm,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
+plotcurve <- function(plottype, ml.model,abstract.df,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
   graphtitle <- paste(names(plottype), ", ",ml.model,"model")
-  if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.dm))
+  if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.df))
   if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle<- paste(graphtitle,", C: ",cost)
   if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle<- paste(graphtitle,", gamma",gamma)
   if (ml.model == "kNN") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
   
-  plot <- ggplot(data = result.df, aes(x=xvar,y=value,color=variable))+ylim(0.4, 1)+ ggtitle(graphtitle)
+  plot <- ggplot(data = result.df, aes(x=xvar,y=value,color=variable))+ylim(0.1, 1)+ ggtitle(graphtitle)
   plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("validate",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
   plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
   plot <- plot+xlab(names(plottype))

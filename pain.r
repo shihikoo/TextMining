@@ -9,12 +9,11 @@
 #
 
 #function for setting up the workpath, load the nesseary libraries
-initiation <- function(workpath="M:/Win7/Desktop/GitHub/pain_svm"){
+initiation <- function(workpath="M:/GitHub/TextMining/"){
   setwd(workpath)
 #  library(caret)
   prepared <- T
   options(stringsAsFactors = TRUE)
-  set.seed(42)
   source('textmining.R')
 }
 
@@ -64,14 +63,14 @@ ml.model <- "SVM"
 datasetratio1 <- 1
 createwc <- T
 
-cost<- 0.9
-gamma <- 0.015
+cost<- 5
+gamma <- 0.002
 sparselevel <- 0.98
-k <- 5
+k <- 3
 
-plottype.list <- list("learning_curve" = c(0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1), 
-                      "feature_curve"= c(0.8,0.85,0.9,0.92,0.93,0.95,0.98),
-                      "cost_curve"= c(0.1, 0.5, 0.8, 0.9,1,1.5),
+ plottype.list <- list("learning_curve" = c(0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1), 
+                      "feature_curve"= c(0.8,0.85,0.9,0.92,0.93,0.95,0.98,0.99),
+                      "cost_curve"= c(0.1, 0.5, 1,2,3,4,5),
                       "gamma_curve" =  c(1e-4,1e-3,0.002, 0.005,0.006,0.007),
                       "cost_gamma" = list("cost" = c(0.1, 0.5, 0.8, 0.9,1,2),"gamma" = c(0.0005,0.001,0.005,0.01)),
                       "k_curve" = c(1,3,5,7,9))
@@ -84,27 +83,27 @@ if (exists("cleandata") == F) cleandata <- preprocessing(alldata,datasetratio1=d
 if (exists("abstract.df") == F) abstract.df <- createDF(cleandata,sparselevel=sparselevel,ml.model=ml.model)
 
 #if (exists("result.df") == F) 
-   result.df <- evaluateprediction(plottype, ml.model,abstract.dm,cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel)
+   result.df <- evaluateprediction(plottype, ml.model,abstract.df,cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k)
 
-#plotcurve(plottype, ml.model,abstract.dm,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel)
+#plotcurve(plottype, ml.model,abstract.df,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel)
 #saveplot
 
-# graphtitle <- paste(names(plottype), ", ",ml.model,"model")
-# if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.dm))
-# if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle<- paste(graphtitle,", C: ",cost)
-# if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle<- paste(graphtitle,", gamma",gamma)
-# if (ml.model == "kNN") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
-# 
-# plot <- ggplot(data = result.df, aes(x=xvar,y=value,color=variable))+ylim(0.4, 1)+ ggtitle(graphtitle)
-# plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("validate",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
-# plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
-# plot <- plot+xlab(names(plottype))
-# plot
-# filename <- paste("img/",names(plottype),"_",ml.model,sep="")
-# if (names(plottype) != "feature_curve") filename <- paste(filename,"_sl",sparselevel,sep="")
-# if (ml.model == "SVM" & names(plottype) != "cost_curve") filename <-  paste(filename, "_c",cost,sep="")
-# if (ml.model == "SVM" & names(plottype) != "gamma_curve") filename <-  paste(filename, "_gamma",gamma,sep="")
-# if (ml.model == "kNN" & names(plottype) != "k_curve") filename <-  paste(filename, "_k",k,sep="")
-# filename <- gsub("[.]","",filename)
-# filename <-  paste(filename, ".png",sep="")
-# ggsave(file=filename)
+graphtitle <- paste(names(plottype), ", ",ml.model,"model")
+if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.df))
+if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle<- paste(graphtitle,", C: ",cost)
+if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle<- paste(graphtitle,", gamma",gamma)
+if (ml.model == "kNN") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
+
+plot <- ggplot(data = result.df, aes(x=xvar,y=value,color=variable))+ylim(0.2, 1)+ ggtitle(graphtitle)
+plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("validate",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
+plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
+plot <- plot+xlab(names(plottype))
+plot
+filename <- paste("img/",names(plottype),"_",ml.model,sep="")
+if (names(plottype) != "feature_curve") filename <- paste(filename,"_sl",sparselevel,sep="")
+if (ml.model == "SVM" & names(plottype) != "cost_curve") filename <-  paste(filename, "_c",cost,sep="")
+if (ml.model == "SVM" & names(plottype) != "gamma_curve") filename <-  paste(filename, "_gamma",gamma,sep="")
+if (ml.model == "kNN" & names(plottype) != "k_curve") filename <-  paste(filename, "_k",k,sep="")
+filename <- gsub("[.]","",filename)
+filename <-  paste(filename, ".png",sep="")
+ggsave(file=filename)
