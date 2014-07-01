@@ -89,11 +89,17 @@ createDF<- function(cleandata,ml.model='SVM', createwc=F,sparselevel=0.8){
   if (ml.model == "NB") {
     print("start to convert counts to 0 or 1")
     abstract.dm <- apply(abstract.dtm, 2, convert_count)
+<<<<<<< HEAD
     print("NB===============================")
     abstract.df <- data.frame(abstract.dm)
   } else {
     abstract.dm <- inspect(abstract.dtm)
     print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+=======
+    abstract.df <- data.frame(abstract.dm)
+  } else {
+    abstract.dm <- inspect(abstract.dtm)
+>>>>>>> origin/master
     abstract.df <- data.frame(abstract.dm)
   }
   print("+++++++++++++++++++++++++++++++++++++++++")
@@ -132,9 +138,13 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
   if (ml.model == "SVM") {
     library(e1071)
     print(paste("-- Start Support Vector Machines training and prediction with cost:", cost, ", gamma:",gamma,"sparse level:",sparselevel))
+<<<<<<< HEAD
     weight <- min(table(abstract.df$flag))/table(abstract.df$flag)
     print(paste('weight: ',weight))
     classifier <- svm(flag ~ ., data = abstract.df[ind.train,],cost=cost,gamma=gamma, class.weights = weight)
+=======
+    classifier <- svm(abstract.df[ind.train,], abstract.df$flag[ind.train],cost=cost,gamma=gamma)
+>>>>>>> origin/master
     print("-- Start to calculate the prediction")
     prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
