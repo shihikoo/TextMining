@@ -34,48 +34,59 @@
           <h3>
 <a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Background</h3>
 
-<p>The screening of current systematic review and meta-analysis relies mainly on human force. While specialists screening provides decent result and double-screening, during which two person screen the same set of publications independently, reduces the error less than 5%, automatic screening is urged to make the publication classification procedures more reproducible and free specialists from repetitive work. 
+<p>The screening of current systematic review and meta-analysis relies mainly on human force. The process involves applying a set of inclusion and exclusion criteria to the results of an internet search strategy, to identify publications which are likely to hold data relevant to the study question. While specialist screening provides decent result and double-screening, during which two person screen the same set of publications independently, probably reduces the error to less than 5%, automatic screening has the potential to make the publication classification procedures much swifter, more reproducible and free specialists from repetitive work. 
+</p>
+
+<p>
+A subsidiary task is to determine whether included publications report measures to reduce the risk of bias such as randomisation, blinding, a sample size calculation and criteria by which experimental subjects (usually animals) might be included in or excluded from the analyses presented.
+
 </p>
 <h3>
 <a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Aim</h3>
 
 <p>The goal of this project is to automate the procedure for publication classification. The ultimate goal is to have a live procedure that will pull data from the internet routinely, process them and classify and label them automatically for different aspects. 
-
-Our first attempt is to have an application to identify Neuroscientific Pain related publications from internet sources, such as PUBMeds, by screening the abstracts of the publications.</p>
+</p>
+<p>
+Our first attempt uses publications identified in the context of a systematic review of the effectiveness of interventions in animal models of neuropathic pain. </p>
 
 <h3>
 
 <a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Data</h3>
 
-<p>Training data are provided by Gillian Currie and Nicki Sherratt in excel format. Dataset from Gillian provides the basic information of the paper and the manual screening decisions. Dataset from Nicki includes information of the article type from ENDNote, which is used in elimite the conference abstract in the data pre-processing stage . 
-
-Only the result in agreement is used (27467 instances). </p>
+<p> The systematic review identified 33,184 potentially eligible manuscripts which were independently screened by 2 reviewers. They agreed on inclusion or exclusion for 27,467 publications, and these form the dataset for this study. One Excel file contains basic publication meta-data along with the inclusion/ exclusion status, and the other provides article categorisation from ENDNote, used to remove conference abstracts in preprocessing. The process is therefore based on bibliographical indexed information (title and abstract) rather than on full text.
+</p>
 
 <h3>
 
 <h3>
 <a name="authors-and-contributors" class="anchor" href="https://github.com/shihikoo"><span class="octicon octicon-link"></span></a> Methods </h3>
 
-<p>We used R program in implementing the text-mining procedure. 
+<p>We used R program in implementing the text-mining procedure. </p>
 
-Step 1 pre-processes include transform data into tab separated txt file manually, read txt file and merge the two datasets, clean up the data by excluding the conference abstract and those instance with no abstract in. Step 2 pre-processing after turn the file into corpus is a standard cleanup is done to remove numbers, punctuation and extra spaces, as well as stop words. Words are stemmed as well. 
+<h4>Step 1 pre-processing</h4>
+<p>Transform data into tab separated txt file manually, read txt file and merge the two datasets, clean up the data by excluding the conference abstract and those instance with no abstract. 
+</p>
+<h4>Step 2 pre-processing</h4>
+<p>
+Standard cleanup is done to remove numbers, punctuation and extra spaces, as well as stop words. Words are stemmed as well. </p>
 
-We test Naive Bayes, kNN and SVM machine learning models in current code. Other possible models are Decision Trees, Outliers, adaboost, JRip, ‘penalizedSVM’ and etc. </p>
+<h4>Processing</h4>
+<p>We test Naive Bayes, kNN and SVM machine learning models in current code. Other possible models are Decision Trees, Outliers, adaboost, JRip, ‘penalizedSVM’ and etc.</p>  
 
-<pre><code>
+<p> The code and cookbook can be found at <a href='https://github.com/shihikoo/TextMining' >https://github.com/shihikoo/TextMining</p>
+
+<!-- <pre><code>
 > source('M:/GitHub/pain_svm/pain.r')
-</code></pre>
+</code></pre> -->
 
 <h3>
 <a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3> </h3>
 
-<p>Code created by <a href="https://github.com/blog/821" class="user-mention">@shihikoo</a>.</p>
+<p>Code created by <a href="#" class="user-mention">@shihikoo</a>.</p>
 
  
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Preliminary Result:
-</h3>
-<p>Naive Bayes gives best F1 result when dataset is small, with good sensitivity but bad precision. SVM, which is still in the process of tuning, should offer the best overall result.
+<h3>Preliminary Result:</h3>
+<p> Naive Bayes gives best F1 result when dataset is small, with good sensitivity but bad precision. SVM, which is still in the process of tuning, should offer the best overall result.
 </p>
         </section>
 
