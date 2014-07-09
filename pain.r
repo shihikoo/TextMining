@@ -73,7 +73,7 @@ plottype.list <- list("learning_curve" = c(0.01, 0.02,0.03,0.04,0.05, 0.06,0.07,
                       "gamma_curve" =  c(1e-4,1e-3,0.002, 0.005,0.006,0.007),
                       "cost_gamma" = list("cost" = c(0.1, 0.5, 0.8, 0.9,1,2),"gamma" = c(0.0005,0.001,0.005,0.01)),
                       "k_curve" = c(1,3,5,7,9))
-plottype <-  data.frame(plottype.list[6])
+plottype <-  data.frame(plottype.list[2])
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # call functions
 if (exists("prepared") == F) initiation()
