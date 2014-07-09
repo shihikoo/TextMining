@@ -4,9 +4,8 @@
 This program is designed to learn the pattern of Neropathic Pain related paper abstracts and then develop a classifier with decent accurancy. 
 
 textmining.r contains most of the functions that can be used later in similar text-mining program. Pain.r is the script that uses those functions for neropathic pain.
-
-The pipeline of the programe: ![pipeline](/img/pipeline for text mining.png =600x800)
-
+The pipeline of the programe: 
+<img src="/img/pipeline for text mining.png" alt="pipeline" style="width: 80%; height: 80%; align:middle"/>
 
 ## Manual preprocessing
 The data are a xlsx file received from Gillian (name: Jing_painrefs_070514.txt, 33819 records with 4 of them empty) and nicki (Jing_NP_references.txt 33575). Gillian's data are considered the full data here, while nicki's data contains valuable information about the article types that aids the classification significantly.
