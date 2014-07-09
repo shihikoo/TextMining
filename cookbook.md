@@ -49,7 +49,7 @@ Then, script creates document term matrix and removes the sparse terms.
 
 If the Naive Bayes is chosen as the machine, the docuemtns term matrix has to be convert from the occurrence to Yes/No, as the Naive Bayes only takes the later one.
 
-3. Trainning  
+## Trainning  
 In order to train, validate and test the learning algorithm, we create the index for trainning data, validation data and test data with the ratio (60%, 20%, 20%). K-fold cross validation cannot be done at this moment becaues of the limitation of the current computing power and memery storage, but will be implemented so it can be used when better perfomance computer is avaliable.  
 
 Choice of models are naive Bayes, k nearest neighbor, support vector machine. 
