@@ -89,13 +89,13 @@ createDF<- function(cleandata,ml.model='SVM', createwc=F,sparselevel=0.8){
     print("start to convert counts to 0 or 1")
     abstract.df <- as.data.frame(apply(abstract.dtm, 2, convert_count))
   } else {
-    abstract.df <- as.data.frame(inspect(abstract.dtm))
+    abstract.df <- as.data.frame(as.matrix(abstract.dtm))
   }
   abstract.df$flag <- cleandata$flag
   return(abstract.df)
 }
 
-traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel=0.98,fold=0){
+traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel=0.98,kfold=0){
   library(caret)
   print("-- Start to split the data")
   nr <- nrow(abstract.df)
@@ -104,14 +104,14 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
   ind.train <- sample(nr,round(nr*0.6))
   ind.validate <- sample( (1:nr)[-ind.train], round(nr*0.2))
   ind.test <- (1:nr)[-c(ind.train,ind.validate)]
- 
-  index <- 1:nr
-  ind.test <- index(1:round(nr*0.2))
-  for(kfold in 1:(fold+1)){  
-     ind.validate <- (kfold*(nr/fold)):((1+kfold)*(nr/fold))
-     ind.train <- index [-c(ind.test,ind.train)]
-  }
-  
+#  #we keep 20% of data for testing the model. The rest of data are used for training and validation
+#   ind.test <- 1:round(nr*0.2)
+#   ind.rest <- (round(nr*0.2)+1):nr
+#   for(ifold in 1:kfold){  
+#      ind.validate <- ind.rest[((ifold-1)*(length(ind.rest)/fold)+1):((ifold)*(length(ind.rest)/kfold))]
+#      ind.train <- ind.rest[-ind.validate]
+#      
+#   }
   
   if (ml.model == "NB") {
     library(e1071)
@@ -166,7 +166,7 @@ evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=c
 
     if( names(plottype) == "feature_curve") {
       sparselevel <- x
-      abstract.df <- createDF(cleandata,sparselevel=sparselevel)
+      abstract.df <- createDF(cleandata,sparselevel=sparselevel,ml.model=ml.model)
     }
     
     if( names(plottype) == "learning_curve") subind = 1:round(nrow(abstract.df)*x)
