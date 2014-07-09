@@ -1,6 +1,5 @@
 # Cookbook for Text miming Script
-========
-
+## Introduction and the pipeline
 This program is designed to learn the pattern of Neropathic Pain related paper abstracts and then develop a classifier with decent accurancy. 
 
 textmining.r contains most of the functions that can be used later in similar text-mining program. Pain.r is the script that uses those functions for neropathic pain.
@@ -25,6 +24,72 @@ There was four papers that were found in nicki's dataset while only one of them 
 Meeting/proceedings/conference records are not considered valid paper because its lack of enough number results. However, taking them out should larged increase the accurency of the classification. This is also the reason we are trying to merge nicki's and gill's data here to elimite all those records.
 
 Here is a summary of the avaliable types of article:
+
+<table>
+    <tr>
+        <td>article</td>
+        <td>article; meeting article;</td>
+        <td>proceedings paper</td>
+        <td>book; meeting</td>
+        <td>conference abstract</td>
+        <td>conference paper</td>
+        <td>conference review</td>
+        <td>correction</td>
+    </tr>
+     <tr>
+        <td>12682</td>
+        <td>1</td>
+        <td>434</td>
+        <td>4</td>
+        <td>1489</td>
+        <td>129</td>
+        <td>17</td>
+        <td>10</td>
+    </tr>
+
+     <tr>
+        <td>correction, addition</td>
+        <td>editorial</td>
+        <td>erratum</td>
+        <td>letter</td>
+        <td>meeting</td>
+        <td>meeting abstract</td>
+        <td>meeting paper </td>
+        <td>note</td>
+    </tr>
+     <tr>
+        <td>1</td>
+        <td>34</td>
+        <td>11</td>
+        <td>37</td>
+        <td>3209</td>
+        <td>387</td>
+        <td>3</td>
+        <td>45</td>
+    </tr>
+
+        <tr>
+        <td> proceedings paper</td>
+        <td>reprint</td>
+        <td>review</td>
+        <td>short survey</td>
+        <td>thesis/dissertation</td>
+        <td>Book</td>
+        <td>Book Section</td>
+
+    </tr>
+     <tr>
+        <td>3</td>
+        <td>4</td>
+        <td>1378</td>
+        <td>53</td>
+        <td>1</td>
+        <td>140</td>
+        <td>88</td>
+
+    </tr>
+</table>
+
                    article           article; meeting article; proceedings paper              book; meeting 
                      12682                          1                        434                          4 
        conference abstract           conference paper          conference review                 correction 
@@ -49,24 +114,25 @@ Then, script creates document term matrix and removes the sparse terms.
 If the Naive Bayes is chosen as the machine, the docuemtns term matrix has to be convert from the occurrence to Yes/No, as the Naive Bayes only takes the later one.
 
 ## Trainning  
-In order to train, validate and test the learning algorithm, we create the index for trainning data, validation data and test data with the ratio (60%, 20%, 20%). K-fold cross validation cannot be done at this moment becaues of the limitation of the current computing power and memery storage, but will be implemented so it can be used when better perfomance computer is avaliable.  
+In order to train, validate and test the learning algorithm, we create the index for trainning data, validation data and test data with the ratio (60%, 20%, 20%). K-fold cross validation cannot be done at this moment becaues of the limitation of the current computing power and memery storage, but will be implemented so it can be used when better perfomance computer is avaliable. The usage of k-fold cross validation is expected to be able to smooth the curves by plotting the mean value of all folds rather than the single value.
 
 Choice of models are naive Bayes, k nearest neighbor, support vector machine. 
 
 We tested and tuned all of them and showed the analysis as following. Sensitivity(TP/(TP+FN), tpr) measures the proportion of actual positives which are correctly identified. Specificity(TN/(FP+TN), tnr) measures the proportion of negatives which are correctly identified. The aim of the classification is increase the specificity as much as possible while maintain a decent sensitivity. A typical sensitivity if around 80%, so currently we aim at a >80% sensitivity and a as good as possible specifity. Balanced accurancy is the mean of sensitivity and specificity, so a high blanced accurancy is a good proxy for good classifier. All trainning results are shown in solid lines and validation result shown in dashed lines. Sensitivity, specificity and balanced accurancy are in green, red and blue.
 
-1. Naive Bayes model:
+####1. Naive Bayes model:
 Naive Bayes model does't have tunning paramenters except the number of features. Here, we plotted feature curve and learnning curve.  
 
-This figure is the sparslevel curve of document term matrix , which represent how number of features relates to the prediction result. It shows that the result is optimistic when the sparse level is at 0.9.
+The following figure is the sparslevel (feature) curve of document term matrix , which represent how number of features relates to the prediction result. It shows that the result is optimistic at high sparse level 0.99. This is consistent with the fact that NB classification is usually under fit.
 ![Naive Bayes feature curve](/img/feature_curve_NB.png)
 
-This figure is the learning curve when the sparse level at 0.9. It shows how the precition result changes with the number of training dataset. The balanced accurancy reaches 75% from ~2700, and it does not increase much more after that. 
-![Naive Bayes learning curve with sparselevel 0.9](/img/learning_curve_NB_sl099.png)
+The following figure is the learning curve when the sparse level at 0.99. It shows how the precition result changes with the number of training dataset. The result is generally monotonic with variance, which may be reduced with cross validation. If sensitivity > 80% is required, ~19000 is the minimum size of dataset, which gives a balanced accuracy at 82%. However, if a ~75% sensitivity is acceptable, the balanced accuracy is around 80% as soon as the number of data reaches ~2500
 
-Thus, for small trainning data set(>2700) Naive  is a good model giving a acceptable result with sensitivity at 75%, specificity around 43% and balanced accuracy around 53%.
+![Naive Bayes learning curve with sparselevel 0.99](/img/learning_curve_NB_sl099.png)
 
-2. kNN model
+Thus, for small trainning data set(~2500) Naive is a OK model giving a acceptable result with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
+
+####2. kNN model
 kNN model has one paramenter (k) to tune, on top of number of features and the size of the training data. 
 
 One suggestion in choosing k is k = sqrt(n) as the first tempt but in our case k will have to be ~100, which may take a rather long time. We can try it once we obtain bette hardware. Typical choices of k are odd number range from 1 to 10, here we plotted for 1, 3, 5, 7, 9 in the following k curve as following.
@@ -74,14 +140,14 @@ One suggestion in choosing k is k = sqrt(n) as the first tempt but in our case k
 
 For all k choices, the sensitivity is too low, althought the specificity is good. This is a surprising result since kNN has been reported to be a decent classifier. Also, the trainning speed is fast but the time for making prediction is rather long especially for large k. We use k = 1 for the following test since it gives best balanced accuracy in the k curve.
 
-This plot is the feature curve with k = 3. 
-![kNN feature curve with k = 3](/img/feature_curve_kNN_k3.png)
+This plot is the feature curve with k = 1. 
+![kNN feature curve with k = 2](/img/feature_curve_kNN_k1.png)
 
-![kNN learning curve with sparselevel = 0.92 and k = 3](/img/learning_curve_kNN_sl092_k3.png)
+![kNN learning curve with sparselevel = 0.92 and k = 1](/img/learning_curve_kNN_sl092_k1.png)
 
 *kNN takes a fairly long time to make predictions. 
 
-3. SVM model
+####3. SVM model
 Here we choose the c-classification SVM model with RBL kenel. Parameters for RBL kenel are cost, gamma and sparse level. An ideal way of turning will be loop over all choices of parameters and find the parameters combination that gives the best validation result.
 
 ![SVM feature curve with c = 3 and gamma = 0.002](/img/feature_curve_SVM_c2_gamma0002.png)
