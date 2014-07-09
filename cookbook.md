@@ -5,7 +5,7 @@ This program is designed to learn the pattern of Neropathic Pain related paper a
 
 textmining.r contains most of the functions that can be used later in similar text-mining program. Pain.r is the script that uses those functions for neropathic pain.
 
-The pipeline of the programe: ![pipeline](/img/pipeline for text mining.png =80%)
+The pipeline of the programe: ![pipeline](/img/pipeline for text mining.png = 600x800)
 
 
 ## Manual preprocessing
