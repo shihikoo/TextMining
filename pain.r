@@ -58,13 +58,13 @@ readData <- function(){
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # set up the variables
-ml.model <- "NB"
+ml.model <- "kNN"
 datasetratio1 <- 1
 createwc <- F
 
 cost<- 2
 gamma <- 0.002
-sparselevel <- 0.99
+sparselevel <- 0.92
 k <- 1
 
 plottype.list <- list("learning_curve" = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1), 
@@ -95,7 +95,7 @@ if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle<- paste
 if (ml.model == "kNN" & names(plottype) != "k_curve") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
 
 plot <- ggplot(data = result.df, aes(x=xvar,y=value,color=variable))+ylim(0.6, 1)+ ggtitle(graphtitle)
-plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("validate",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
+plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("test",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
 plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
 plot <- plot+xlab(names(plottype))
 plot
