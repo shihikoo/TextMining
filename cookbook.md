@@ -63,9 +63,12 @@ Naive Bayes model does't have tunning paramenters except the number of features.
 The following figure is the sparslevel (feature) curve of document term matrix , which represent how number of features relates to the prediction result. It shows that the result is optimistic at high sparse level 0.99. This is consistent with the fact that NB classification is usually under fit.
 ![Naive Bayes feature curve](/img/feature_curve_NB.png)
 
-The following figure is the learning curve when the sparse level at 0.99, which equvalent to a feature number of 1485. It shows how the precition result changes with the number of training dataset. The result is generally monotonic with variance, which may be reduced with cross validation. If sensitivity > 80% is required, ~19000 is the minimum size of dataset, which gives a balanced accuracy at 82%. However, if a ~75% sensitivity is acceptable, the balanced accuracy is around 80% as soon as the number of data reaches ~2500
-
+The following figure is the learning curve when the sparse level at 0.99, which equvalent to a feature number of 1485. It shows how the precition result changes with the number of training dataset. The result is generally monotonic with variance. The variance may be reduced with cross validation. The training is converged as the number of data increases (the gap between training data and validation data becomes smaller as the number of data increase). The model reaches its optimistic result around 25000. Thus the perfomace of the model will not improve even we increase the size of the data set. 
 ![Naive Bayes learning curve with sparselevel 0.99](/img/learning_curve_NB_sl099.png)
+
+After tuning, we used test result to test the performance of the model as plotted below. If sensitivity > 80% is required, ~19000 is the minimum size of dataset, which gives a balanced accuracy at 82%. However, if a ~75% sensitivity is acceptable, the balanced accuracy is around 80% as soon as the number of data reaches ~2500
+![Test data result: Naive Bayes learning curve with sparselevel 0.99](/img/test_learning_curve_NB_sl099.png)
+
 
 Thus, for small trainning data set(~2500) Naive is a OK model giving a acceptable result with validation data with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
 
@@ -108,6 +111,8 @@ The learning curve with the optimum parameters (sparse level = 0.92, c = 3, gamm
 ![SVM learning curve with sparse level = 0.92, c = 3 and gamma = 0.002](/img/learning_curve_SVM_sl092_c2_gamma0002.png)
 
 Final result from the test data (comparing with the training data)
+![SVM learning curve with sparse level = 0.92, c = 3 and gamma = 0.002](/img/learning_curve_SVM_sl092_c2_gamma0002.png)
+
 
 ##Future Work:
 * parallel computing with mclapply
