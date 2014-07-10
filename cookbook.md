@@ -66,11 +66,11 @@ The following figure is the sparslevel (feature) curve of document term matrix ,
 The following figure is the learning curve when the sparse level at 0.99, which equvalent to a feature number of 1485. It shows how the precition result changes with the number of training dataset. The result is generally monotonic with variance. The variance may be reduced with cross validation. The training is converged as the number of data increases (the gap between training data and validation data becomes smaller as the number of data increase). The model reaches its optimistic result around 25000. Thus the perfomace of the model will not improve even we increase the size of the data set. 
 ![Naive Bayes learning curve with sparselevel 0.99](/img/learning_curve_NB_sl099.png)
 
-After tuning, we used test result to test the performance of the model as plotted below. If sensitivity > 80% is required, ~19000 is the minimum size of dataset, which gives a balanced accuracy at 82%. However, if a ~75% sensitivity is acceptable, the balanced accuracy is around 80% as soon as the number of data reaches ~2500
+After tuning, we used test result to test the performance of the model as plotted below. The performance is similar as the validation result. The performance reaches its best possible accuracy when the size of data set reaches about 5000. The sensitivity is then around 80% and specificity about 83%. Noting that the data set number is the total number and 60% of them was used to train the model.
+
 ![Test data result: Naive Bayes learning curve with sparselevel 0.99](/img/test_learning_curve_NB_sl099.png)
 
-
-Thus, for small trainning data set(~2500) Naive is a OK model giving a acceptable result with validation data with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
+Thus, for small trainning data set(~5000*0.6 = 3000) Naive is a OK model giving a acceptable result with validation data with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
 
 ####2. kNN model (knn in {class})
 kNN model has one paramenter (k) to tune, on top of number of features and the size of the training data.  
@@ -110,9 +110,8 @@ The gamma curve with sparse level = 0.92 and cost = 2. The sensitivity peaks at 
 The learning curve with the optimum parameters (sparse level = 0.92, c = 3, gamma = 0.002). Curves converge as the size of the dataset increases, but there is still a gap between training result and the validation result, which means the fitting is till over fit. A over fit training can be improved simply by increase the number of trainning data or reduce the number of features. However, as we showed before, the overall performance is better when the sparse level = 0.92. Thus, the performace, especially the sensitivity, of the classifier still have the possibility to improve with the training dataset increases with the time.
 ![SVM learning curve with sparse level = 0.92, c = 3 and gamma = 0.002](/img/learning_curve_SVM_sl092_c2_gamma0002.png)
 
-Final result from the test data (comparing with the training data)
-![SVM learning curve with sparse level = 0.92, c = 3 and gamma = 0.002](/img/learning_curve_SVM_sl092_c2_gamma0002.png)
-
+After the tuning svm, we test the model with our test data (comparing with the training data). Similar as Naive Bayes model, the model performs all the best results come after the size of the data set goes up to around 5000 (training set around 3000) . The over all performance of SVM is be tter than Naive Bayes, with sensitivity around 83% and specificity aroung 84% when the number of the data ste is around 5000 , and with the current full data set (training set around 16500) the sensitivity reaches 85% and the spcificity reaches 86%. As state before, the accuracy will increase once there is more data avaliable. 
+![Test data result: SVM learning curve with sparse level = 0.92, c = 3 and gamma = 0.002](/img/test_learning_curve_SVM_sl092_c2_gamma0002.png)
 
 ##Future Work:
 * parallel computing with mclapply
