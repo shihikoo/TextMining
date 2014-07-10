@@ -122,7 +122,6 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
   }
   if (ml.model == "kNN") {
-    library(caret)
     print("-- Start k-Nearest Neighbour training and prediction")
   #  classifier <- knn3(flag ~ ., abstract.df[ind.train,], k = k) 
      library(class)

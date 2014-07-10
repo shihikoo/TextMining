@@ -63,26 +63,31 @@ Naive Bayes model does't have tunning paramenters except the number of features.
 The following figure is the sparslevel (feature) curve of document term matrix , which represent how number of features relates to the prediction result. It shows that the result is optimistic at high sparse level 0.99. This is consistent with the fact that NB classification is usually under fit.
 ![Naive Bayes feature curve](/img/feature_curve_NB.png)
 
-The following figure is the learning curve when the sparse level at 0.99. It shows how the precition result changes with the number of training dataset. The result is generally monotonic with variance, which may be reduced with cross validation. If sensitivity > 80% is required, ~19000 is the minimum size of dataset, which gives a balanced accuracy at 82%. However, if a ~75% sensitivity is acceptable, the balanced accuracy is around 80% as soon as the number of data reaches ~2500
+The following figure is the learning curve when the sparse level at 0.99, which equvalent to a feature number of 1485. It shows how the precition result changes with the number of training dataset. The result is generally monotonic with variance, which may be reduced with cross validation. If sensitivity > 80% is required, ~19000 is the minimum size of dataset, which gives a balanced accuracy at 82%. However, if a ~75% sensitivity is acceptable, the balanced accuracy is around 80% as soon as the number of data reaches ~2500
 
 ![Naive Bayes learning curve with sparselevel 0.99](/img/learning_curve_NB_sl099.png)
 
-Thus, for small trainning data set(~2500) Naive is a OK model giving a acceptable result with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
+Thus, for small trainning data set(~2500) Naive is a OK model giving a acceptable result with validation data with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
 
 ####2. kNN model
-kNN model has one paramenter (k) to tune, on top of number of features and the size of the training data. 
+kNN model has one paramenter (k) to tune, on top of number of features and the size of the training data.  
 
-One suggestion in choosing k is k = sqrt(n) as the first tempt but in our case k will have to be ~100, which may take a rather long time. We can try it once we obtain bette hardware. Typical choices of k are odd number range from 1 to 10, here we plotted for 1, 3, 5, 7, 9 in the following k curve as following.
-![kNN k-curve with sparse level = 0.92](/img/k_curve_kNN_sl092.png)
+One suggestion in choosing k is k = sqrt(n) as the first tempt but in our case k will have to be ~100, which will take a rather long time for current machine. Also, the trainning speed is fast but the time for making prediction is rather long especially for large k.  We can try large k choice once we obtain bette hardware. 
 
-For all k choices, the sensitivity is too low, althought the specificity is good. This is a surprising result since kNN has been reported to be a decent classifier. Also, the trainning speed is fast but the time for making prediction is rather long especially for large k. We use k = 1 for the following test since it gives best balanced accuracy in the k curve.
+Conventional choices of k are odd number range from 1 to 10, here we plotted for 1, 3, 5, 7, 9 in the following k curve as following. 
 
-This plot is the feature curve with k = 1. 
-![kNN feature curve with k = 2](/img/feature_curve_kNN_k1.png)
+As shown in the figure, for all k choices, the sensitivity is too low, althought the specificity is good. The lines do converge (training set curves meet validate curve) as k increase but the values are also decreasing as k increase. We use k = 1 for the following test since it gives best balanced accuracy and sensitivity in validation data in the k curve.
 
-![kNN learning curve with sparselevel = 0.92 and k = 1](/img/learning_curve_kNN_sl092_k1.png)
+![kNN k-curve with sparse level = 0.99](/img/k_curve_kNN_sl099.png)
 
-*kNN takes a fairly long time to make predictions. 
+This plot is the feature curve with k = 1. It shows that the result is the best with spare level equals to 0.99, which equvalent to a feature number of 1485.
+![kNN feature curve with k = 1](/img/feature_curve_kNN_k1.png)
+
+This plot is the learning curves when sparselevel = 0.99 and k = 1. 
+![kNN learning curve with sparselevel = 0.99 and k = 1](/img/learning_curve_kNN_sl099_k1.png)
+
+
+###### kNN takes a fairly long time (O(dn)) to make predictions, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. 
 
 ####3. SVM model
 Here we choose the c-classification SVM model with RBL kenel. Parameters for RBL kenel are cost, gamma and sparse level. An ideal way of turning will be loop over all choices of parameters and find the parameters combination that gives the best validation result.
