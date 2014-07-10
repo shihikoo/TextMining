@@ -25,70 +25,6 @@ Meeting/proceedings/conference records are not considered valid paper because it
 
 Here is a summary of the avaliable types of article:
 
-<table>
-    <tr>
-        <td>article</td>
-        <td>article; meeting article;</td>
-        <td>proceedings paper</td>
-        <td>book; meeting</td>
-        <td>conference abstract</td>
-        <td>conference paper</td>
-        <td>conference review</td>
-        <td>correction</td>
-    </tr>
-     <tr>
-        <td>12682</td>
-        <td>1</td>
-        <td>434</td>
-        <td>4</td>
-        <td>1489</td>
-        <td>129</td>
-        <td>17</td>
-        <td>10</td>
-    </tr>
-
-     <tr>
-        <td>correction, addition</td>
-        <td>editorial</td>
-        <td>erratum</td>
-        <td>letter</td>
-        <td>meeting</td>
-        <td>meeting abstract</td>
-        <td>meeting paper </td>
-        <td>note</td>
-    </tr>
-     <tr>
-        <td>1</td>
-        <td>34</td>
-        <td>11</td>
-        <td>37</td>
-        <td>3209</td>
-        <td>387</td>
-        <td>3</td>
-        <td>45</td>
-    </tr>
-
-        <tr>
-        <td> proceedings paper</td>
-        <td>reprint</td>
-        <td>review</td>
-        <td>short survey</td>
-        <td>thesis/dissertation</td>
-        <td>Book</td>
-        <td>Book Section</td>
-
-    </tr>
-     <tr>
-        <td>3</td>
-        <td>4</td>
-        <td>1378</td>
-        <td>53</td>
-        <td>1</td>
-        <td>140</td>
-        <td>88</td>
-
-    </tr>
-</table>
 
                    article           article; meeting article; proceedings paper              book; meeting 
                      12682                          1                        434                          4 
@@ -102,6 +38,7 @@ Here is a summary of the avaliable types of article:
                          3                          4                       1378                         53 
        thesis/dissertation                       Book               Book Section
                          1                        140                         88
+
 
 Only Book, Book section, article, review are kept for training the machine. Those procedures are done with function readData(), the output is the proper "orignal" data set. The script then call this function and save the output into "alldata".
 
