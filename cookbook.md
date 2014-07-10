@@ -92,6 +92,7 @@ This plot is the learning curves when sparselevel = 0.99 and k = 1. The curves d
 kNN takes a fairly long time (O(dn)) to make predictions, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. However, due to the constrait of time we decide to drop kNN method since NB and SVM seem to perform much better in our case. 
 
 Final result from the test data (comparing with the training data)
+![Test data result: kNN learning curve with sparse level = 0.99 and k = 1](/img/test_learning_curve_kNN_sl099_k1.png)
 
 ####3. SVM model  (svm in {e1071})
 Here we choose the c-classification SVM model with RBL kenel. Parameters for RBL kenel are cost, gamma and sparse level. An ideal way of turning will be loop over all choices of parameters and find the parameters combination that gives the best validation result. However, due to the limitation of the memory of the computer, a manual tunning was done. Here we just show our final tuning plots. 
