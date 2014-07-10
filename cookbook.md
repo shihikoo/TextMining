@@ -46,18 +46,18 @@ Function preparedata() takes the alldata as input. It is made to remove the reco
 
 The script then creates corpus. One can also create a word cloud at this step.
 
-Then, script creates document term matrix and removes the sparse terms.
+Then, script creates document term matrix with Tf-Idf weight (trials show this improve the performace of both NB and SVM models) and removes the sparse terms.
 
 If the Naive Bayes is chosen as the machine, the docuemtns term matrix has to be convert from the occurrence to Yes/No, as the Naive Bayes only takes the later one.
 
-## Trainning  
+## Trainning
 In order to train, validate and test the learning algorithm, we create the index for trainning data, validation data and test data with the ratio (60%, 20%, 20%). K-fold cross validation cannot be done at this moment becaues of the limitation of the current computing power and memery storage, but will be implemented so it can be used when better perfomance computer is avaliable. The usage of k-fold cross validation is expected to be able to smooth the curves by plotting the mean value of all folds rather than the single value.
 
-Choice of models are naive Bayes, k nearest neighbor, support vector machine. 
+Choice of models are naive Bayes, k nearest neighbor, support vector machine.
 
 We tested and tuned all of them and showed the analysis as following. Sensitivity(TP/(TP+FN), tpr) measures the proportion of actual positives which are correctly identified. Specificity(TN/(FP+TN), tnr) measures the proportion of negatives which are correctly identified. The aim of the classification is increase the specificity as much as possible while maintain a decent sensitivity. A typical sensitivity if around 80%, so currently we aim at a >80% sensitivity and a as good as possible specifity. Balanced accurancy is the mean of sensitivity and specificity, so a high blanced accurancy is a good proxy for good classifier. All trainning results are shown in solid lines and validation result shown in dashed lines. Sensitivity, specificity and balanced accurancy are in green, red and blue.
 
-####1. Naive Bayes model:
+####1. Naive Bayes model: (naiveBayes in {e1071})
 Naive Bayes model does't have tunning paramenters except the number of features. Here, we plotted feature curve and learnning curve.  
 
 The following figure is the sparslevel (feature) curve of document term matrix , which represent how number of features relates to the prediction result. It shows that the result is optimistic at high sparse level 0.99. This is consistent with the fact that NB classification is usually under fit.
@@ -69,7 +69,7 @@ The following figure is the learning curve when the sparse level at 0.99, which 
 
 Thus, for small trainning data set(~2500) Naive is a OK model giving a acceptable result with validation data with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
 
-####2. kNN model
+####2. kNN model (knn in {class})
 kNN model has one paramenter (k) to tune, on top of number of features and the size of the training data.  
 
 One suggestion in choosing k is k = sqrt(n) as the first tempt but in our case k will have to be ~100, which will take a rather long time for current machine. Also, the trainning speed is fast but the time for making prediction is rather long especially for large k.  We can try large k choice once we obtain bette hardware. 
@@ -83,19 +83,35 @@ As shown in the figure, for all k choices, the sensitivity is too low, althought
 This plot is the feature curve with k = 1. It shows that the result is the best with spare level equals to 0.99, which equvalent to a feature number of 1485.
 ![kNN feature curve with k = 1](/img/feature_curve_kNN_k1.png)
 
-This plot is the learning curves when sparselevel = 0.99 and k = 1. 
+This plot is the learning curves when sparselevel = 0.99 and k = 1. The curves do not converge but do increase as the number of data increases. Although the low sensitivity still puts kNN as an less than ideal classifier in this case.
 ![kNN learning curve with sparselevel = 0.99 and k = 1](/img/learning_curve_kNN_sl099_k1.png)
 
+kNN takes a fairly long time (O(dn)) to make predictions, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. However, we decide to drop kNN method since NB and SVM seem to perform much better in our case. 
 
-###### kNN takes a fairly long time (O(dn)) to make predictions, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. 
+Final result from the test data (comparing with the training data)
 
-####3. SVM model
-Here we choose the c-classification SVM model with RBL kenel. Parameters for RBL kenel are cost, gamma and sparse level. An ideal way of turning will be loop over all choices of parameters and find the parameters combination that gives the best validation result.
+####3. SVM model  (svm in {e1071})
+Here we choose the c-classification SVM model with RBL kenel. Parameters for RBL kenel are cost, gamma and sparse level. An ideal way of turning will be loop over all choices of parameters and find the parameters combination that gives the best validation result. However, due to the limitation of the memory of the computer, a manual tunning was done. Here we just show our final tuning plots. 
 
+Due to the asymmetry of the class of the datast (positive:negative ~= 1:5). We used 
+
+The feature curve when c =3 and gamma = 0.002. Sensitivity is above 80% from 0.85 to 0.95. The balanced accurancy reaches highest when sparse level = 0.95 but since there is a clear drop of sensitivity from sparse level = 0.92 to sparse level = 0.95. 0.92 seems to be the better choise here. In addition, less features means faster computering.
 ![SVM feature curve with c = 3 and gamma = 0.002](/img/feature_curve_SVM_c2_gamma0002.png)
 
+The cost curve with sparse level = 0.92 and gamma = 0.002. The performance does not change much with the cost but since the computing time increases with the cost, so we think cost = 2 gives the best result.
 ![SVM cost curve with sparse level = 0.92 and gamma = 0.002](/img/cost_curve_SVM_sl092_gamma0002.png)
 
+The gamma curve with sparse level = 0.92 and cost = 2. The sensitivity peaks at 0.001 and 0.002 while balanced accuracy is higher when gamma = 0.002, so we choose gamma = 0.002 as the optimum parameter.
 ![SVM gamma curve with sparse level = 0.92 and cost = 2](/img/gamma_curve_SVM_sl092_c2.png)
 
+The learning curve with the optimum parameters (sparse level = 0.92, c = 3, gamma = 0.002). Curves converge as the size of the dataset increases, but there is still a gap between training result and the validation result, which means the fitting is till over fit. A over fit training can be improved simply by increase the number of trainning data or reduce the number of features. However, as we showed before, the overall performance is better when the sparse level = 0.92. Thus, the performace, especially the sensitivity, of the classifier still have the possibility to improve with the training dataset increases with the time.
 ![SVM learning curve with sparse level = 0.92, c = 3 and gamma = 0.002](/img/learning_curve_SVM_sl092_c2_gamma0002.png)
+
+Final result from the test data (comparing with the training data)
+
+##Future Work:
+* parallel computing with mclapply
+* implement the cross-validation
+* implement the auto tuning
+* optimise the code
+* profilie and analyse the code 

@@ -120,6 +120,7 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
     print("-- Start to calculate the prediction")
     prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
+    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
   }
   if (ml.model == "kNN") {
     print("-- Start k-Nearest Neighbour training and prediction")
@@ -127,6 +128,7 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
      library(class)
      prediction_train  <- knn(abstract.df[ind.train,-nc], abstract.df[ind.train,-nc],abstract.df$flag[ind.train], k = k)
      prediction_validate <- knn(abstract.df[ind.train,-nc], abstract.df[ind.validate,-nc],abstract.df$flag[ind.train], k = k)
+     prediction_test <- knn(abstract.df[ind.train,-nc], abstract.df[ind.test,-nc],abstract.df$flag[ind.train], k = k)
   }
   if (ml.model == "SVM") {
     library(e1071)
@@ -138,6 +140,7 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
     print("-- Start to calculate the prediction")
     prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
+    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
   }
   if (ml.model == "tune svm"){
     library(e1071)
@@ -153,8 +156,9 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
   print(summary_train)
   summary_validate <- confusionMatrix(table(prediction_validate, abstract.df$flag[ind.validate]))
   print(summary_validate)
-  
-  return(list(train=summary_train,validate=summary_validate))
+  summary_test <- confusionMatrix(table(prediction_test, abstract.df$flag[ind.test]))
+  print(summary_test)
+  return(list(train=summary_train,validate=summary_validate,test=summary_test))
 }
 
 evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
@@ -184,15 +188,15 @@ evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=c
 
     result.df <- rbind(result.df
                        ,list(xvar, "train_tpr",summary$train$byClass[1])
-                       ,list(xvar, "validate_tpr",summary$validate$byClass[1])
-                   #    ,list(xvar, "train_ppv",summary$train$byClass[3])
-                   #    ,list(xvar, "validate_ppv",summary$validate$byClass[3])
-                   #    ,list(xvar, "train_f1", 2*summary$train$byClass[1]*summary$train$byClass[3]/(summary$train$byClass[1]+summary$train$byClass[3]))
-                   #    ,list(xvar, "validate_f1", 2*summary$validate$byClass[1]*summary$validate$byClass[3]/(summary$validate$byClass[1]+summary$validate$byClass[3]))
                        ,list(xvar, "train_BAccuracy",summary$train$byClass[8])
-                       ,list(xvar, "validate_BAccuracy",summary$validate$byClass[8])
                        ,list(xvar, "train_tnr",summary$train$byClass[2])
-                       ,list(xvar, "validate_tnr",summary$validate$byClass[2])
+#                        ,list(xvar, "validate_tpr",summary$validate$byClass[1]) 
+#                        ,list(xvar, "validate_BAccuracy",summary$validate$byClass[8])                      
+#                        ,list(xvar, "validate_tnr",summary$validate$byClass[2])
+                       ,list(xvar, "test_tpr",summary$test$byClass[1])
+                       ,list(xvar, "test_BAccuracy",summary$test$byClass[8])
+                       ,list(xvar, "test_tnr",summary$test$byClass[2])
+                   
     )
   }
   names(result.df) <- c("xvar","variable","value")
@@ -212,6 +216,7 @@ plotcurve <- function(plottype, ml.model,abstract.df,result.df,cost=cost,gamma=g
   plot <- plot+xlab(names(plottype))
   plot
 }
+
 saveplot <- function(plottype, ml.model,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
   filename <- paste("img/",names(plottype),"_",ml.model,sep="")
   if (names(plottype) != "feature_curve") filename <- paste(filename,"_sl",sparselevel,sep="")

@@ -73,7 +73,7 @@ plottype.list <- list("learning_curve" = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0
                       "gamma_curve" =  c(1e-4,1e-3,0.002, 0.005,0.006,0.007),
                       "cost_gamma" = list("cost" = c(0.1, 0.5, 0.8, 0.9,1,2),"gamma" = c(0.0005,0.001,0.005,0.01)),
                       "k_curve" = c(1,3,5,7,9))
-plottype <-  data.frame(plottype.list[2])
+plottype <-  data.frame(plottype.list[1])
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # call functions
 if (exists("prepared") == F) initiation()
@@ -100,11 +100,11 @@ plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9
 plot <- plot+xlab(names(plottype))
 plot
 
-filename <- paste("img/",names(plottype),"_",ml.model,sep="")
+filename <- paste("img/test_",names(plottype),"_",ml.model,sep="")
 if (names(plottype) != "feature_curve") filename <- paste(filename,"_sl",sparselevel,sep="")
 if (ml.model == "SVM" & names(plottype) != "cost_curve") filename <-  paste(filename, "_c",cost,sep="")
 if (ml.model == "SVM" & names(plottype) != "gamma_curve") filename <-  paste(filename, "_gamma",gamma,sep="")
 if (ml.model == "kNN" & names(plottype) != "k_curve") filename <-  paste(filename, "_k",k,sep="")
 filename <- gsub("[.]","",filename)
 filename <-  paste(filename, ".png",sep="")
-ggsave(file=filename, )
+ggsave(file=filename)
