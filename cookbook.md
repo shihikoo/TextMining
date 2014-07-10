@@ -86,7 +86,7 @@ This plot is the feature curve with k = 1. It shows that the result is the best 
 This plot is the learning curves when sparselevel = 0.99 and k = 1. The curves do not converge but do increase as the number of data increases. Although the low sensitivity still puts kNN as an less than ideal classifier in this case.
 ![kNN learning curve with sparselevel = 0.99 and k = 1](/img/learning_curve_kNN_sl099_k1.png)
 
-kNN takes a fairly long time (O(dn)) to make predictions, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. However, we decide to drop kNN method since NB and SVM seem to perform much better in our case. 
+kNN takes a fairly long time (O(dn)) to make predictions, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. However, due to the constrait of time we decide to drop kNN method since NB and SVM seem to perform much better in our case. 
 
 Final result from the test data (comparing with the training data)
 
