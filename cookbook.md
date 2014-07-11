@@ -66,11 +66,13 @@ The following figure is the sparslevel (feature) curve of document term matrix ,
 The following figure is the learning curve when the sparse level at 0.99, which equvalent to a feature number of 1485. It shows how the precition result changes with the number of training dataset. The result is generally monotonic with variance. The variance may be reduced with cross validation. The training is converged as the number of data increases (the gap between training data and validation data becomes smaller as the number of data increase). The model reaches its optimistic result around 25000. Thus the perfomace of the model will not improve even we increase the size of the data set. 
 ![Naive Bayes learning curve with sparselevel 0.99](/img/learning_curve_NB_sl099.png)
 
-After tuning, we used test result to test the performance of the model as plotted below. The performance is similar as the validation result. The performance reaches its best possible accuracy when the size of data set reaches about 5000. The sensitivity is then around 80% and specificity about 83%. Noting that the data set number is the total number and 60% of them was used to train the model.
+After tuning, we used test result to test the performance of the model as plotted below. The performance is similar as the validation result. The performance reaches its best possible accuracy when the size of data set reaches about 5000. The sensitivity is then around 80% and specificity about 83%. Noting that the data set number is the total number and 60% of them was used to train the model. 
+
+Thus, for small trainning data set(~5000*0.6 = 3000) Naive is a OK model giving a acceptable result with validation data with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
 
 ![Test data result: Naive Bayes learning curve with sparselevel 0.99](/img/test_learning_curve_NB_sl099.png)
 
-Thus, for small trainning data set(~5000*0.6 = 3000) Naive is a OK model giving a acceptable result with validation data with sensitivity at 75%, specificity around 83% and balanced accuracy around 80%.
+
 
 ####2. kNN model (knn in {class})
 kNN model has one paramenter (k) to tune, on top of number of features and the size of the training data.  
@@ -79,20 +81,17 @@ One suggestion in choosing k is k = sqrt(n) as the first tempt but in our case k
 
 Conventional choices of k are odd number range from 1 to 10, here we plotted for 1, 3, 5, 7, 9 in the following k curve as following. 
 
-As shown in the figure, for all k choices, the sensitivity is too low, althought the specificity is good. The lines do converge (training set curves meet validate curve) as k increase but the values are also decreasing as k increase. We use k = 1 for the following test since it gives best balanced accuracy and sensitivity in validation data in the k curve.
+As shown in the k curve (sparse level = 0.95), for all k choices, the sensitivity is too low, althought the specificity is good. The lines do converge (training set curves meet validate curve) as k increase but the values are also decreasing as k increase. We use k = 1 for the following test since it gives best balanced accuracy and sensitivity in validation data in the k curve.
+![kNN k-curve with sparse level = 0.95](/img/k_curve_kNN_sl095.png)
 
-![kNN k-curve with sparse level = 0.99](/img/k_curve_kNN_sl099.png)
-
-This plot is the feature curve with k = 1. It shows that the result is the best with spare level equals to 0.99, which equvalent to a feature number of 1485.
+This plot is the feature curve with k = 1. It shows that the result is the best with spare level equals to 0.99, which equvalent to a feature number of 1485. However, since the computing time increases at O(dn) (d: feature dimentsions) for kNN model, we choose to use sparse level = 0.95 instead as the best parameters.  
 ![kNN feature curve with k = 1](/img/feature_curve_kNN_k1.png)
 
-This plot is the learning curves when sparselevel = 0.99 and k = 1. The curves do not converge but do increase as the number of data increases. Although the low sensitivity still puts kNN as an less than ideal classifier in this case.
-![kNN learning curve with sparselevel = 0.99 and k = 1](/img/learning_curve_kNN_sl099_k1.png)
+This plot is the learning curves when sparselevel = 0.95 and k = 1. The curves do not converge but do increase as the number of data increases. Although the low sensitivity still puts kNN as an less than ideal classifier in this case.
+![kNN learning curve with sparselevel = 0.95 and k = 1](/img/learning_curve_kNN_sl095_k1.png)
 
-kNN takes a fairly long time (O(dn)) to make predictions, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. However, due to the constrait of time we decide to drop kNN method since NB and SVM seem to perform much better in our case. 
-
-Final result from the test data (comparing with the training data)
-![Test data result: kNN learning curve with sparse level = 0.99 and k = 1](/img/test_learning_curve_kNN_sl099_k1.png)
+Final result from the test data (comparing with the training data). kNN takes a fairly long time, while the perfomance is not satisfying. This is a surprising result since kNN has been reported to be a decent classifier. There are many ways that may improving the results and the computing times: applying weight, KD-tree, a better choice of k. However, due to the constrait of time we decide to drop kNN method since NB and SVM seem to perform much better in our case. 
+![Test data result: kNN learning curve with sparse level = 0.95 and k = 1](/img/test_learning_curve_kNN_sl095_k1.png)
 
 ####3. SVM model  (svm in {e1071})
 Here we choose the c-classification SVM model with RBL kenel. Parameters for RBL kenel are cost, gamma and sparse level. An ideal way of turning will be loop over all choices of parameters and find the parameters combination that gives the best validation result. However, due to the limitation of the memory of the computer, a manual tunning was done. Here we just show our final tuning plots. 
