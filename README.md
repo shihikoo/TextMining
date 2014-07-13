@@ -12,3 +12,5 @@ In order to run the application, set up the parameter settings in pain.r and the
 Current changable parameters are machine learning model (NB, kNN, SVM), related parameters for each model, features sparse level and ratio of data set to use.
 
 There is also an example in the script generate all sorts of curves (learning curve, feature curve, cost curve, gamma curve, ) for analyzing model and tuning the parameters.
+
+All analysis (tuning) plots are stored in img/ while the number associated with the plots are in the same folder with the same name but in .txt format

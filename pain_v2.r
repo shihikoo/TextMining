@@ -59,9 +59,6 @@ readData <- function(){
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # set up the variables
 ml.model <- "kNN"
-datasetratio1 <- 1
-createwc <- F
-
 cost<- 2
 gamma <- 0.002
 sparselevel <- 0.99
@@ -78,13 +75,13 @@ plottype <-  data.frame(plottype.list[6])
 # call functions
 if (exists("prepared") == F) initiation()
 if (exists("alldata") == F) alldata <- readData()
-if (exists("cleandata") == F) cleandata <- preprocessing(alldata,datasetratio1=datasetratio1)
-if (exists("abstract.df") == F)  abstract.df <- createDF(cleandata,sparselevel=sparselevel,ml.model=ml.model,createwc=createwc)
+if (exists("cleandata") == F) cleandata <- preprocessing(alldata)
+if (exists("index" == F) index <- indexgenerator(nrow(cleandata), ratio.test = 0.2)
+if (exists("abstract.df") == F)  abstract.df <- createDF(cleandata,sparselevel=sparselevel,ml.model=ml.model,createwc = FALSE)
 
-if (exists("index" == F) index <- (nrow(abstract.df),c(0.2,0.8))
 
-best.para <- tunemodel(abstract.df[ind.train,])
-classifier <- traindata()
+if (exists("best.para" == F) best.para <- tunemodel(abstract.df[index$train,])
+if (exists(classifier) == F) classifier <- traindata(abstract.df[index$train,],best.para)
 result.test <- train(test.data,classifier,best.para)
 
 #if (exists("result.df") == F)

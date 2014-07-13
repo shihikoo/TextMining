@@ -27,8 +27,7 @@ preprocessing <- function(alldata,datasetratio1=1){
   #normalize the abstract
   cleandata$abstract  <- normalizeabstract(cleandata$abstract)
   # randomalize the data
-  set.seed(1)
-  cleandata[sample(round(nrow(cleandata)*datasetratio1)),]
+  cleandata
 }
 
 # Detailed normalization on text
@@ -95,10 +94,15 @@ createDF<- function(cleandata,ml.model='SVM', createwc=F,sparselevel=0.8){
   return(abstract.df)
 }
 
-dividedata <- function(n,ratio.train=0.8,ratio.test=0.2){
+indexgenerator <- function(n,ratio.train = -1,ratio.test = 0.2){
     set.seed(42)
     ind.test <- sample(n, round(n*ratio.test))
-    ind.train <- (1:n)[-ind.test]
+    if ((ratio.train < 0) | (ratio.train+ratio.test > 1)){
+        ind.train <- (1:n)[-ind.test]
+    } else{
+        if (random == TRUE) ind.train <- sample((1:n)[-ind.test],round(n*ratio.train))
+    }
+    index <- data.frame(test=ind.test,train=ind.train)
 }
 
 traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel=0.98,kfold=0){
@@ -109,14 +113,12 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
   set.seed(42)
   ind.train <- sample(nr,round(nr*0.6))
   ind.validate <- sample( (1:nr)[-ind.train], round(nr*0.2))
-  ind.test <- (1:nr)[-c(ind.train,ind.validate)]
 #  #we keep 20% of data for testing the model. The rest of data are used for training and validation
 #   ind.test <- 1:round(nr*0.2)
 #   ind.rest <- (round(nr*0.2)+1):nr
 #   for(ifold in 1:kfold){
 #      ind.validate <- ind.rest[((ifold-1)*(length(ind.rest)/fold)+1):((ifold)*(length(ind.rest)/kfold))]
 #      ind.train <- ind.rest[-ind.validate]
-#
 #   }
 
   if (ml.model == "NB") {
@@ -165,6 +167,32 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
   summary_test <- confusionMatrix(table(prediction_test, abstract.df$flag[ind.test]))
   print(summary_test)
   return(list(train=summary_train,validate=summary_validate,test=summary_test))
+}
+
+tunesvm <- function(cleandata,range.cost=range.cost,range.gamma=range.gamma,range.sl=range.sl){
+    ml.model <- 'SVM'
+    result.df <- data.frame(sparselevel = numberic(0), cost = numeric(0), gamma = numeric(0), variable = character(0), sensitivity = numeric(0),specivicity = numeric(0),balancedaccuracy = numeric(0))
+    for(sparselevel in rangel.sl){
+        abstract.df <- createDF(cleandata, sparselevel = sparselevel, ml.model = ml.model, createwc = FALSE)
+        for (cost in range.cost){
+            for (gamma in range.gamma){
+                summary <- traindata(abstract.df[,], ml.model = ml.model,cost=cost,gamma=gamma,sparselevel=sparselevel)
+                result.df <- rbind(result.df
+                       ,list(sparselevel,cost, gamma, "train_tpr" ,summary$train$byClass[1])
+                       ,list(sparselevel,cost, gamma, "train_BAccuracy",summary$train$byClass[8])
+                       ,list(sparselevel,cost, gamma, "train_tnr",summary$train$byClass[2])
+                       ,list(sparselevel,cost, gamma, "validate_tpr",summary$validate$byClass[1])
+                       ,list(sparselevel,cost, gamma, "validate_BAccuracy",summary$validate$byClass[8])
+                       ,list(sparselevel,cost, gamma, "validate_tnr",summary$validate$byClass[2])
+                       )
+            }
+        }
+    }
+    besttune <- which(result.df$
+    result.df$best.sl <-
+    result.df$best.cost <-
+    result.df$best.gamma <-
+    return(result.df)
 }
 
 evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){

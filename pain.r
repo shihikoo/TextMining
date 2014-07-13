@@ -58,13 +58,13 @@ readData <- function(){
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # set up the variables
-ml.model <- "kNN"
+ml.model <- "SVM"
 datasetratio1 <- 1
 createwc <- F
 
 cost<- 2
 gamma <- 0.002
-sparselevel <- 0.95
+sparselevel <- 0.92
 k <- 1
 
 plottype.list <- list("learning_curve" = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1), 
@@ -88,13 +88,13 @@ if (exists("cleandata") == F) cleandata <- preprocessing(alldata,datasetratio1=d
 #plotcurve(plottype, ml.model,abstract.df,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel)
 #saveplot
 
-graphtitle <- paste(names(plottype), ", ",ml.model,"model")
+graphtitle <- paste("Validation: ", names(plottype), ", ",ml.model,"model")
 if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.df))
 if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle<- paste(graphtitle,", C: ",cost)
 if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle<- paste(graphtitle,", gamma",gamma)
 if (ml.model == "kNN" & names(plottype) != "k_curve") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
 
-plot <- ggplot(data = result.df[-grep("test",result.df$variable),], aes(x=xvar,y=value,color=variable))+ylim(0.2, 1)+ ggtitle(graphtitle)
+plot <- ggplot(data = result.df[-grep("test",result.df$variable),], aes(x=xvar,y=value,color=variable))+ylim(0.6, 1)+ ggtitle(graphtitle)
 plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("validate",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
 plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
 plot <- plot+xlab(names(plottype))
@@ -109,8 +109,14 @@ filename <- gsub("[.]","",filename)
 ggsave(file=paste(filename, ".png",sep=""))
 
 write.table(result.df, file = paste(filename, ".txt",sep=""), quote=FALSE, row.names = F, append = FALSE, sep = "\t")
+if (names(plottype) == 'learning_curve'){ 
+graphtitle <- paste("Test: ", names(plottype), ", ",ml.model,"model")
+if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.df))
+if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle<- paste(graphtitle,", C: ",cost)
+if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle<- paste(graphtitle,", gamma",gamma)
+if (ml.model == "kNN" & names(plottype) != "k_curve") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
 
-plot <- ggplot(data = result.df[-grep("validate",result.df$variable),], aes(x=xvar,y=value,color=variable))+ylim(0.2, 1)+ ggtitle(graphtitle)
+plot <- ggplot(data = result.df[-grep("validate",result.df$variable),], aes(x=xvar,y=value,color=variable))+ylim(0.6, 1)+ ggtitle(graphtitle)
 plot <- plot+ geom_point(aes(shape = variable))+geom_line(data=result.df[grep("test",result.df$variable),],size=1,linetype="dashed")+geom_line(data=result.df[grep("train",result.df$variable),],size=1,linetype="solid")
 plot <- plot+scale_color_manual(values=c("#56B4E9","#D55E00", "#009E73","#56B4E9", "#D55E00",   "#009E73"))
 plot <- plot+xlab(names(plottype))
@@ -125,3 +131,4 @@ filename <- gsub("[.]","",filename)
 ggsave(file=paste(filename, ".png",sep=""))
 
 write.table(result.df, file = paste(filename, ".txt",sep=""), quote=FALSE, row.names = F, append = FALSE, sep = "\t")
+}
