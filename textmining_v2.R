@@ -105,22 +105,11 @@ indexgenerator <- function(n,ratio.train = -1,ratio.test = 0.2){
     index <- data.frame(test=ind.test,train=ind.train)
 }
 
-traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel=0.98,kfold=0){
+traindata <- function(abstract.df, ml.model,cost=1,gamma=1,k=3,sparselevel=0.98,kfold=0){
   library(caret)
   print("-- Start to split the data")
   nr <- nrow(abstract.df)
   nc <- ncol(abstract.df)
-  set.seed(42)
-  ind.train <- sample(nr,round(nr*0.6))
-  ind.validate <- sample( (1:nr)[-ind.train], round(nr*0.2))
-#  #we keep 20% of data for testing the model. The rest of data are used for training and validation
-#   ind.test <- 1:round(nr*0.2)
-#   ind.rest <- (round(nr*0.2)+1):nr
-#   for(ifold in 1:kfold){
-#      ind.validate <- ind.rest[((ifold-1)*(length(ind.rest)/fold)+1):((ifold)*(length(ind.rest)/kfold))]
-#      ind.train <- ind.rest[-ind.validate]
-#   }
-
   if (ml.model == "NB") {
     library(e1071)
     print(paste("-- Start naive Bayes training and prediction with sparse level:",sparselevel))
@@ -128,11 +117,10 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
     print("-- Start to calculate the prediction")
     prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
-    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
   }
   if (ml.model == "kNN") {
     print("-- Start k-Nearest Neighbour training and prediction")
-  #  classifier <- knn3(flag ~ ., abstract.df[ind.train,], k = k)
+  #  classifier <- knn3(flag ~ ., data = abstract.df[ind.train,], k = k)
      library(class)
      prediction_train  <- knn(abstract.df[ind.train,-nc], abstract.df[ind.train,-nc],abstract.df$flag[ind.train], k = k)
      prediction_validate <- knn(abstract.df[ind.train,-nc], abstract.df[ind.validate,-nc],abstract.df$flag[ind.train], k = k)
@@ -148,7 +136,6 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
     print("-- Start to calculate the prediction")
     prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
     prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
-    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
   }
   if (ml.model == "tune svm"){
     library(e1071)
@@ -159,7 +146,6 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
     summary(obj)
     plot(obj)
   }
-
   summary_train <- confusionMatrix(table(prediction_train, abstract.df$flag[ind.train]))
   print(summary_train)
   summary_validate <- confusionMatrix(table(prediction_validate, abstract.df$flag[ind.validate]))
@@ -169,31 +155,47 @@ traindata <- function(abstract.df, ml.model="SVM",cost=1,gamma=1,k=3,sparselevel
   return(list(train=summary_train,validate=summary_validate,test=summary_test))
 }
 
+predict <- function(){
+    library(caret)
+}
+
 tunesvm <- function(cleandata,range.cost=range.cost,range.gamma=range.gamma,range.sl=range.sl){
     ml.model <- 'SVM'
-    result.df <- data.frame(sparselevel = numberic(0), cost = numeric(0), gamma = numeric(0), variable = character(0), sensitivity = numeric(0),specivicity = numeric(0),balancedaccuracy = numeric(0))
+    result.df <- data.frame(sparselevel = numberic(0), cost = numeric(0), gamma = numeric(0), train.sensitivity = numeric(0), train.specivicity = numeric(0),train.BalancedAccuracy = numeric(0), test.sensitivity = numeric(0), test.specivicity = numeric(0), test.BalancedAccuracy = numeric(0))
+
+#  #we keep 20% of data for testing the model. The rest of data are used for training and validation
+#   ind.test <- 1:round(nr*0.2)
+#   ind.rest <- (round(nr*0.2)+1):nr
+#   for(ifold in 1:kfold){
+#      ind.validate <- ind.rest[((ifold-1)*(length(ind.rest)/fold)+1):((ifold)*(length(ind.rest)/kfold))]
+#      ind.train <- ind.rest[-ind.validate]
+#   }
+
     for(sparselevel in rangel.sl){
         abstract.df <- createDF(cleandata, sparselevel = sparselevel, ml.model = ml.model, createwc = FALSE)
         for (cost in range.cost){
             for (gamma in range.gamma){
-                summary <- traindata(abstract.df[,], ml.model = ml.model,cost=cost,gamma=gamma,sparselevel=sparselevel)
-                result.df <- rbind(result.df
-                       ,list(sparselevel,cost, gamma, "train_tpr" ,summary$train$byClass[1])
-                       ,list(sparselevel,cost, gamma, "train_BAccuracy",summary$train$byClass[8])
-                       ,list(sparselevel,cost, gamma, "train_tnr",summary$train$byClass[2])
-                       ,list(sparselevel,cost, gamma, "validate_tpr",summary$validate$byClass[1])
-                       ,list(sparselevel,cost, gamma, "validate_BAccuracy",summary$validate$byClass[8])
-                       ,list(sparselevel,cost, gamma, "validate_tnr",summary$validate$byClass[2])
-                       )
+                summary <- traindata(abstract.df, ml.model = ml.model,cost=cost,gamma=gamma,sparselevel=sparselevel)
+                result.df <- rbind(result.df,c(sparselevel,cost, gamma,summary$train$byClass[1],summary$train$byClass[2],summary$train$byClass[8],summary$test$byClass[1],,summary$test$byClass[2],summary$test$byClass[8]))
             }
         }
     }
-    besttune <- which(result.df$
-    result.df$best.sl <-
-    result.df$best.cost <-
-    result.df$best.gamma <-
+    sensitivity <- result.df[,7]
+    specificity <- result.df[,8]
+    BA <- result.df[,9]
+#set up the rule here for choising the best parameter for the best model.
+    good.ind <- which(sensitivity > 0.8)
+    best.ind <- which.max(BA[good.ind])
+
+    result.df$best.sl <- sparselevel[good.ind[best.ind]]
+    result.df$best.cost <- cost[good.ind[best.ind]]
+    result.df$best.gamma <- gamma[good.ind[best.ind]]
+
     return(result.df)
 }
+
+    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
+    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
 
 evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
   print("Start to train and evaluate the prediction")
