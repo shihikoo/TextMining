@@ -64,36 +64,41 @@ gamma <- 0.002
 sparselevel <- 0.99
 k <- 1
 
-plottype.list <- list("learning_curve" = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1),
-                      "feature_curve"= c(0.8,0.85,0.9,0.92,0.93,0.95,0.98,0.99),
-                      "cost_curve"= c(0.1, 0.5, 1,2,3,4,5),
-                      "gamma_curve" =  c(1e-4,1e-3,0.002, 0.005,0.006,0.007),
-                      "cost_gamma" = list("cost" = c(0.1, 0.5, 0.8, 0.9,1,2),"gamma" = c(0.0005,0.001,0.005,0.01)),
-                      "k_curve" = c(1,3,5,7,9))
+range.dataset <- c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.2, 0.3, 0.4, 0.5,0.6, 0.7,0.8, 0.9, 1)
+range.cost <- c(0.1, 0.5, 1,2,3,4,5)
+range.gamma <- c(1e-4,1e-3,0.002, 0.005,0.006,0.007)
+range.sl <- c(0.8,0.85,0.9,0.92,0.93,0.95,0.98,0.99)
+range.k <- c(1,3,5,7,9)
+
+plottype.list <- list("learning_curve" = range.dataset,
+                      "feature_curve" = range.sl,
+                      "cost_curve"= range.cost,
+                      "gamma_curve" = range.gamma,
+                      "k_curve" = range.k)
 plottype <-  data.frame(plottype.list[6])
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # call functions
 if (exists("prepared") == F) initiation()
 if (exists("alldata") == F) alldata <- readData()
 if (exists("cleandata") == F) cleandata <- preprocessing(alldata)
-if (exists("index" == F) index <- indexgenerator(nrow(cleandata), ratio.test = 0.2)
-if (exists("abstract.df") == F)  abstract.df <- createDF(cleandata,sparselevel=sparselevel,ml.model=ml.model,createwc = FALSE)
+if (exists("index") == F) index <- indexgenerator(nrow(cleandata), ratio.test = 0.2)
+if (exists("best.para") == F) best.para <- tunemodel(cleandata[index$train, ], ml.model, range.cost = range.cost, range.gamma =  range.gamma, range.sl = range.sl)
 
+if (exists("abstract.df") == F)  abstract.df <- createDF(cleandata, sparselevel = best.para$best.sl[0], ml.model = ml.model, createwc = FALSE)
 
-if (exists("best.para" == F) best.para <- tunemodel(abstract.df[index$train,])
-if (exists(classifier) == F) classifier <- traindata(abstract.df[index$train,],best.para)
-result.test <- train(test.data,classifier,best.para)
+if (exists(classifier) == F) classifier <- traindata(abstract.df[index$train,], best.para)
+result.test <- train(test.data, classifier, best.para)
 
 #if (exists("result.df") == F)
-   result.df <- evaluateprediction(plottype, ml.model,abstract.df,cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k)
+   result.df <- evaluateprediction(plottype, ml.model, abstract.df, cleandata, cost = cost, gamma = gamma, sparselevel = sparselevel, k = k)
 
 #plotcurve(plottype, ml.model,abstract.df,result.df,cost=cost,gamma=gamma,sparselevel=sparselevel)
 #saveplot
 
 graphtitle <- paste(names(plottype), ", ",ml.model,"model")
 if (names(plottype) != "feature_curve") graphtitle <- paste(graphtitle,"sparse level:",sparselevel,", features num:",ncol(abstract.df))
-if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle<- paste(graphtitle,", C: ",cost)
-if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle<- paste(graphtitle,", gamma",gamma)
+if ((ml.model == "SVM") & (names(plottype) != "cost_curve")) graphtitle <- paste(graphtitle,", C: ",cost)
+if ((ml.model == "SVM") & (names(plottype) != "gamma_curve")) graphtitle <- paste(graphtitle,", gamma",gamma)
 if (ml.model == "kNN" & names(plottype) != "k_curve") graphtitle <-  paste(graphtitle, ", k: ",k,sep="")
 
 plot <- ggplot(data = result.df, aes(x=xvar,y=value,color=variable))+ylim(0.6, 1)+ ggtitle(graphtitle)

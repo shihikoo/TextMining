@@ -96,74 +96,50 @@ createDF<- function(cleandata,ml.model='SVM', createwc=F,sparselevel=0.8){
 
 indexgenerator <- function(n,ratio.train = -1,ratio.test = 0.2){
     set.seed(42)
+#we keep part of data for testing the model. The rest of data are used for training and validation
     ind.test <- sample(n, round(n*ratio.test))
     if ((ratio.train < 0) | (ratio.train+ratio.test > 1)){
         ind.train <- (1:n)[-ind.test]
     } else{
         if (random == TRUE) ind.train <- sample((1:n)[-ind.test],round(n*ratio.train))
     }
-    index <- data.frame(test=ind.test,train=ind.train)
+    index <- list(test=ind.test,train=ind.train)
 }
 
-traindata <- function(abstract.df, ml.model,cost=1,gamma=1,k=3,sparselevel=0.98,kfold=0){
-  library(caret)
+traindata <- function(abstract.df, ml.model='SVM',cost=2,gamma=0.002,k=1){
   print("-- Start to split the data")
-  nr <- nrow(abstract.df)
-  nc <- ncol(abstract.df)
   if (ml.model == "NB") {
     library(e1071)
     print(paste("-- Start naive Bayes training and prediction with sparse level:",sparselevel))
-    classifier <- naiveBayes(flag ~ ., data = abstract.df[ind.train,])
-    print("-- Start to calculate the prediction")
-    prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
-    prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
+    classifier <- naiveBayes(flag ~ ., data = abstract.df)
   }
   if (ml.model == "kNN") {
+    library(caret)
     print("-- Start k-Nearest Neighbour training and prediction")
-  #  classifier <- knn3(flag ~ ., data = abstract.df[ind.train,], k = k)
-     library(class)
-     prediction_train  <- knn(abstract.df[ind.train,-nc], abstract.df[ind.train,-nc],abstract.df$flag[ind.train], k = k)
-     prediction_validate <- knn(abstract.df[ind.train,-nc], abstract.df[ind.validate,-nc],abstract.df$flag[ind.train], k = k)
-     prediction_test <- knn(abstract.df[ind.train,-nc], abstract.df[ind.test,-nc],abstract.df$flag[ind.train], k = k)
+    classifier <- knn3(flag ~ ., data = abstract.df, k = k)
   }
   if (ml.model == "SVM") {
     library(e1071)
     print(paste("-- Start Support Vector Machines training and prediction with cost:", cost, ", gamma:",gamma,"sparse level:",sparselevel))
-    weight <- min(table(abstract.df$flag[ind.train]))/table(abstract.df$flag[ind.train])
-    print(paste('weight: ',weight))
-    classifier <- svm(flag ~ ., data = abstract.df[ind.train,],cost=cost,gamma=gamma, class.weights = weight)
-#    classifier <- svm(abstract.df[ind.train,], abstract.df$flag[ind.train],cost=cost,gamma=gamma)
-    print("-- Start to calculate the prediction")
-    prediction_train <- predict(classifier, newdata = abstract.df[ind.train,])
-    prediction_validate <- predict(classifier, newdata = abstract.df[ind.validate,])
+    weight <- min(table(abstract.df$flag))/table(abstract.df$flag)
+    print(paste('SVM weight: ',weight))
+    classifier <- svm(flag ~ ., data = abstract.df, cost=cost, gamma=gamma, class.weights = weight)
   }
-  if (ml.model == "tune svm"){
-    library(e1071)
-    print("-- Start to tune SVM")
-    obj <- tune.svm(abstract.df[ind.train,],abstract.df$flag[ind.train],
-                    validation.x =abstract.df[ind.validate,],ind.validate =abstract.df$flag[ind.validate],
-                    gamma = 2^(-1:1), cost = 2^(1:4))
-    summary(obj)
-    plot(obj)
-  }
-  summary_train <- confusionMatrix(table(prediction_train, abstract.df$flag[ind.train]))
-  print(summary_train)
-  summary_validate <- confusionMatrix(table(prediction_validate, abstract.df$flag[ind.validate]))
-  print(summary_validate)
-  summary_test <- confusionMatrix(table(prediction_test, abstract.df$flag[ind.test]))
-  print(summary_test)
-  return(list(train=summary_train,validate=summary_validate,test=summary_test))
+  return(classifier)
 }
 
-predict <- function(){
+predict <- function(classifier,abstract.df){
     library(caret)
+    print("-- Start to calculate the prediction")
+    prediction <- predict(classifier, newdata = abstract.df)
+    summary <- confusionMatrix(table(prediction, abstract.df$flag))
+    print(summary)
+    return(summary)
 }
 
-tunesvm <- function(cleandata,range.cost=range.cost,range.gamma=range.gamma,range.sl=range.sl){
-    ml.model <- 'SVM'
+tunemodel <- function(cleandata,ml.model='SVM',range.cost = c(0.01, 0.1, 1, 10), range.gamma = c(0.001,0.1,1,10), range.sl = c(0.8, 0.9, 0.95, 0.99), range.k = c(1,3,5,7,9), kfold = 0){
     result.df <- data.frame(sparselevel = numberic(0), cost = numeric(0), gamma = numeric(0), train.sensitivity = numeric(0), train.specivicity = numeric(0),train.BalancedAccuracy = numeric(0), test.sensitivity = numeric(0), test.specivicity = numeric(0), test.BalancedAccuracy = numeric(0))
 
-#  #we keep 20% of data for testing the model. The rest of data are used for training and validation
 #   ind.test <- 1:round(nr*0.2)
 #   ind.rest <- (round(nr*0.2)+1):nr
 #   for(ifold in 1:kfold){
@@ -193,9 +169,6 @@ tunesvm <- function(cleandata,range.cost=range.cost,range.gamma=range.gamma,rang
 
     return(result.df)
 }
-
-    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
-    prediction_test <- predict(classifier, newdata = abstract.df[ind.test,])
 
 evaluateprediction <- function(plottype, ml.model, abstract.df, cleandata,cost=cost,gamma=gamma,sparselevel=sparselevel,k=k){
   print("Start to train and evaluate the prediction")
